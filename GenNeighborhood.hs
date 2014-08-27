@@ -44,14 +44,22 @@ nextNum = (+1) . maximum . map (maximum . nums)
 walkCode _   []   = []
 walkCode gen code = code'
   where code' = case elem of
-          Just x -> x : tail code
+          Just x -> x ++ tail code
           Nothing -> head code : walkCode gen (tail code)
         elem  = gen $ head code
 
 splits code = walkCode gen code
   where num = nextNum code
-        gen (n, Map f n1)  = Just (n, Map f n1)
-        gen (n, Fold f n1) = Just (n, Fold f n1)
-        gen _               = Nothing
+        gen ([n], Map f n1)  = Just [(makeSplit n1),
+                                   ([num+2], Map f num), 
+                                   ([num+3], Map f (num+1)),
+                                   ([n], Concat (num+2) (num+3))]
+        gen ([n], Fold f n1) = Just [(makeSplit n1),
+                                   ([num+1], Map f num),
+                                   ([num+3], Map f (num+1)),
+                                   ([n], Concat (num+2) (num+3))]
+        gen _              = Nothing
+        makeSplit n        = ([num, num+1], Split n)
+        
         
 
