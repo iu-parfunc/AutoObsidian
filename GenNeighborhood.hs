@@ -8,14 +8,13 @@ data AExp  = V Var
            deriving (Show)
 
 type Var = Integer
-data Exp = Exp
-         deriving (Show)
+type Exp = String
 
 f :: Exp
-f = undefined
+f = "f"
 
 g :: Exp
-g = undefined
+g = "g"
 
 
 -- one example program and a permutation
@@ -55,8 +54,8 @@ splits code = walkCode gen code
                                    ([num+3], Map f (num+1)),
                                    ([n], Concat (num+2) (num+3))]
         gen ([n], Fold f n1) = Just [(makeSplit n1),
-                                   ([num+1], Map f num),
-                                   ([num+3], Map f (num+1)),
+                                   ([num+2], Fold f num),
+                                   ([num+3], Fold f (num+1)),
                                    ([n], Concat (num+2) (num+3))]
         gen _              = Nothing
         makeSplit n        = ([num, num+1], Split n)
