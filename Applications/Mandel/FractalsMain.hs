@@ -18,8 +18,6 @@ import Data.Int
 import System.Environment
 import System.Exit
 
-import Control.DeepSeq
-
 -- Autotuning framework 
 import Auto.Score
 
@@ -29,7 +27,10 @@ import Criterion.Types
 import Criterion.Monad
 import Criterion.Internal
 
-threads = 256
+--exception
+import Control.Exception
+
+threads = 12256
 blocks  = 64
 image_size = 1024
 identity = 256
@@ -53,16 +54,28 @@ main = do
             -- threads here means blocks.
             o <== (blocks,kern)
             syncAll
-            -- copyOut o 
+            copyOut o 
 
-  -- the one (1) is "experiment-number" 
-  report <- withConfig (defaultConfig {verbosity = Verbose} ) $
-                runAndAnalyseOne 1 ("ImageSize " ++ show image_size)
-                                   (whnfIO runIt)
+  -- the one (1) is "experiment-number"
+  report <- catch
+    (
+      do 
+        report <- withConfig (defaultConfig {verbosity = Verbose} ) $
+                  runAndAnalyseOne 1 ("ImageSize " ++ show image_size)
+                                     (whnfIO (runIt >> return ()))
+        return $ Just report
+    )
+    (\e -> do putStrLn (show (e :: SomeException))
+              return Nothing
+              )
 
-  putStrLn $ show (reportName report)
---  putStrLn $ show (reportMeasured report) 
-  putStrLn $ show (reportAnalysis report) 
+  
+  case report of
+    Just report -> do
+      putStrLn $ show (reportName report)
+  --  putStrLn $ show (reportMeasured report) 
+      putStrLn $ show (reportAnalysis report)
+    Nothing -> putStrLn "run failed" 
     
  -- defaultMainWith (defaultConfig {forceGC = True})
  --      [bgroup ("ImageSize " ++ show image_size)
