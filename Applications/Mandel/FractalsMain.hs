@@ -30,7 +30,7 @@ import Criterion.Internal
 --exception
 import Control.Exception
 
-threads = 12256
+threads = 256
 blocks  = 64
 image_size = 1024
 identity = 256
