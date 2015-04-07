@@ -56,10 +56,11 @@ main = do
             syncAll
             copyOut o 
 
-  -- the one (1) is "experiment-number"
+ 
   report <- catch
     (
-      do 
+      do
+        -- the one (1) is "experiment-number"
         report <- withConfig (defaultConfig {verbosity = Verbose} ) $
                   runAndAnalyseOne 1 ("ImageSize " ++ show image_size)
                                      (whnfIO (runIt >> return ()))
