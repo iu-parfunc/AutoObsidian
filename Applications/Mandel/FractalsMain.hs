@@ -25,26 +25,34 @@ import Data.Time.Clock
 import Control.DeepSeq
 
 -- Autotuning framework 
-import Auto.Score 
+import Auto.Score
+
+-- timing
+import Criterion.Main
+import Criterion.Types 
+
+
+threads = 256
+image_size = 1024
+identity = 256
 
 -- Vary number of threads/block and image size  
 main = do
   putStrLn "Autotuning Mandelbrot fractal kernel"
-  args <- getArgs
-  when (length args /=  2) $
-    do
-      putStrLn "Provide 2 args: ThreadsPerBlock, ImageSize" 
-      exitWith (ExitFailure 1)
 
-  let t = read $ args P.!! 0
-      s = read $ args P.!! 1 
-    
-  withCUDA $
-    do
-      compile_t0 <- lift getCurrentTime 
-      kern <- capture t (mandel s) 
-      compile_t1 <- lift getCurrentTime
+  ctx <- initialise
 
+  
+  kern <- captureIO ("kernel" ++ show identity)
+          (props ctx)
+          threads
+          (mandel image_size)
+  
+  
+  
+  
+  withCUDA' ctx $
+    do    
       transfer_start <- lift getCurrentTime
       allocaVector (fromIntegral (s*s)) $ \o -> 
         do

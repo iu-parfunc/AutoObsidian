@@ -3,5 +3,5 @@
 
 cabal sandbox init 
 
-cabal install ./Obsidian/ 
-cabal install ./src/
+cabal install ./Obsidian/ ./src/
+
