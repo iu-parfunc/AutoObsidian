@@ -89,7 +89,6 @@ instance Entity Number Double () () IO where
       )
       (\e -> do putStrLn (show (e :: SomeException))
                 return Nothing)
-                
 
 main = do
   let cfg = GAConfig 
@@ -102,7 +101,10 @@ main = do
             0.2 -- parameter for mutation (% of replaced letters)
             False -- whether or not to use checkpointing
             False -- don't rescore archive in each generation
-      g = mkStdGen 0 -- random generator
+  
+  currTime <- getCurrentTime
+  let timed = floor $ utctDayTime currTime :: Int
+  let g = mkStdGen timed -- random generator
 
   es <- evolve g cfg () ()
   let e = snd $ P.head es :: Int
