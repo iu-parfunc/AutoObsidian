@@ -72,6 +72,8 @@ executable Mandel
                , Obsidian == 0.4.0.0
                , criterion 
                , AutoObsidian
+               , GA
+               , random
   
   -- Directories containing source files.
   -- hs-source-dirs:      
