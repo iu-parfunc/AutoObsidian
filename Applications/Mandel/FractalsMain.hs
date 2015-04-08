@@ -81,18 +81,23 @@ instance Entity BitString Double Context () IO where
               o <== (fromIntegral imageSize,kern)
               syncAll
               copyOut o
-    if threads == 0 then return Nothing else catch
-      ( do
-           -- This could be criterion instead, but it was complicated
-           t0   <- getCurrentTime
-           runIt >> return ()
-           t1   <- getCurrentTime
-           let timed = realToFrac $ diffUTCTime t1 t0
-           putStrLn $ "Time for " ++ (show threads) ++ " was " ++ (show timed)
-           return $ Just timed
-      )
-      (\e -> do putStrLn (show (e :: SomeException))
-                return Nothing)
+    if threads == 0
+      then return Nothing
+      else catch
+           ( do
+                -- This could be criterion instead, but it was complicated
+                t0   <- getCurrentTime
+                runIt >> return ()
+                t1   <- getCurrentTime
+
+                let timed = realToFrac $ diffUTCTime t1 t0
+                putStrLn $ "Time for " ++ (show threads) ++ " was " ++ (show timed)
+                return $ Just timed
+
+           )
+           (\e -> do putStrLn (show (e :: SomeException))
+                     return Nothing
+           )
 
 main = do
   let cfg = GAConfig 
