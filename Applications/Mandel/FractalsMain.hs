@@ -62,8 +62,9 @@ instance Entity Number Double () () IO where
                                         else abs (e - (1 + seed `mod` 10))
 
   -- Return a number denoting a score. Lower is better.
+  score _ 0 = return $ Just 1000000
   score _ threads = do
-
+    
     putStrLn $ "Trying with threads = " ++ (show threads)
 
     ctx <- initialise
@@ -85,11 +86,12 @@ instance Entity Number Double () () IO where
            t0   <- getCurrentTime
            runIt >> return ()
            t1   <- getCurrentTime
+           destroyCtx ctx
            return $ Just $ realToFrac $ diffUTCTime t1 t0           
       )
       (\e -> do putStrLn (show (e :: SomeException))
+                destroyCtx ctx
                 return Nothing)
-                
 
 main = do
   let cfg = GAConfig 
