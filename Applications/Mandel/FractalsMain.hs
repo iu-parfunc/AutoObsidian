@@ -18,7 +18,7 @@ import Control.Monad.State
 -- Autotuning framework 
 -- import Auto.Score
 import System.Random (mkStdGen, random)
-import GA (Entity(..), GAConfig(..), evolveVerbose)
+import GA (Entity(..), GAConfig(..), evolve)
 
 -- -- timing
 import Data.Time.Clock
@@ -46,7 +46,7 @@ type Number = Int
 instance Entity Number Double () () IO where
 
   -- Generate a random starting number between 0 and maxNum.
-  genRandom _ seed = return $ (fst $ random $ mkStdGen seed) `mod` maxNum
+  genRandom _ seed = return $ 1 + ((fst $ random $ mkStdGen seed) `mod` maxNum)
 
   -- Ideally we'd be working with a bit neighborhood here for the Int,
   -- rather than just having a few bits of arithmetic.
@@ -93,9 +93,9 @@ instance Entity Number Double () () IO where
 
 main = do
   let cfg = GAConfig 
-            20 -- population size
-            10 -- archive size (best entities to keep track of)
-            100 -- maximum number of generations
+            5 -- population size
+            100 -- archive size (best entities to keep track of)
+            5 -- maximum number of generations
             0.8 -- crossover rate (% of entities by crossover)
             0.2 -- mutation rate (% of entities by mutation)
             0.0 -- parameter for crossover (not used here)
@@ -104,7 +104,7 @@ main = do
             False -- don't rescore archive in each generation
       g = mkStdGen 0 -- random generator
 
-  es <- evolveVerbose g cfg () ()
+  es <- evolve g cfg () ()
   let e = snd $ P.head es :: Int
   putStrLn $ "best entity: " ++ (show e)
   
