@@ -18,7 +18,7 @@ import Control.Monad.State
 -- Autotuning framework 
 -- import Auto.Score
 import System.Random (mkStdGen, random)
-import GA (Entity(..), GAConfig(..), evolve)
+import GA (Entity(..), GAConfig(..), evolveVerbose)
 
 -- -- timing
 import Data.Time.Clock
@@ -85,7 +85,9 @@ instance Entity Number Double () () IO where
            t0   <- getCurrentTime
            runIt >> return ()
            t1   <- getCurrentTime
-           return $ Just $ realToFrac $ diffUTCTime t1 t0           
+           let timed = realToFrac $ diffUTCTime t1 t0
+           putStrLn $ "Time for " ++ (show threads) ++ " was " ++ (show timed)
+           return $ Just timed
       )
       (\e -> do putStrLn (show (e :: SomeException))
                 return Nothing)
@@ -106,7 +108,7 @@ main = do
   let timed = floor $ utctDayTime currTime :: Int
   let g = mkStdGen timed -- random generator
 
-  es <- evolve g cfg () ()
+  es <- evolveVerbose g cfg () ()
   let e = snd $ P.head es :: Int
   putStrLn $ "best entity: " ++ (show e)
   
