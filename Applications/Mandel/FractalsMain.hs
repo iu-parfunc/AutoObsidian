@@ -51,8 +51,8 @@ instance Entity Number Double () () IO where
   -- Ideally we'd be working with a bit neighborhood here for the Int,
   -- rather than just having a few bits of arithmetic.
   crossover _ _ seed e1 e2 = return $ Just $ case seed `mod` 3 of
-                                                  0 -> e1+e2
-                                                  1 -> abs (e1-e2)
+                                                  0 -> (e1+e2) `mod` maxNum
+                                                  1 -> (abs (e1-e2)) `mod` maxNum
                                                   2 -> (e1+e2) `div` 2
                                                   _ -> error "crossover: unknown case"
 
