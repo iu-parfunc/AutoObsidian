@@ -15,10 +15,11 @@ import Obsidian.Run.CUDA.Exec
 
 -- import qualified Data.Vector.Storable as V
 import Control.Monad.State
+import Control.Monad.Reader
 
 -- Autotuning framework 
 import Auto.Score
-import System.Random (mkStdGen, random)
+import System.Random (mkStdGen, random,randomR, StdGen, newStdGen)
 import GA (Entity(..), GAConfig(..), evolveVerbose)
 
 -- -- timing
@@ -119,54 +120,4 @@ main = do
   let e = snd $ P.head es :: BitString
       v = bitStringToNum e
   putStrLn $ "best entity: " ++ (show v)
-  
-  
 
-
--- -- Vary number of threads/block and image size  
--- main = do
---   putStrLn "Autotuning Mandelbrot fractal kernel"
-
---   ctx <- initialise
-
-  
---   kern <- captureIO ("kernel" ++ show identity)
---           (props ctx)
---           threads
---           (mandel image_size)
-  
- 
---   let runIt = withCUDA' ctx $
---         allocaVector (fromIntegral (image_size*image_size)) $ \o -> 
---           do
---             -- threads here means blocks.
---             o <== (blocks,kern)
---             syncAll
---             copyOut o 
-
- 
---   report <- catch
---     (
---       do
---         -- the one (1) is "experiment-number"
---         report <- withConfig (defaultConfig {verbosity = Verbose} ) $
---                   runAndAnalyseOne 1 ("ImageSize " ++ show image_size)
---                                      (whnfIO (runIt >> return ()))
---         return $ Just report
---     )
---     (\e -> do putStrLn (show (e :: SomeException))
---               return Nothing
---               )
-
-  
---   case report of
---     Just report -> do
---       putStrLn $ show (reportName report)
---   --  putStrLn $ show (reportMeasured report) 
---       putStrLn $ show (reportAnalysis report)
---     Nothing -> putStrLn "run failed" 
-    
---  -- defaultMainWith (defaultConfig {forceGC = True})
---  --      [bgroup ("ImageSize " ++ show image_size)
---  --       [ bench "Obsidian" $ whnfIO runIt ]
---  --      ]
