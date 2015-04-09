@@ -19,6 +19,7 @@ import Obsidian.Run.CUDA.Exec
 -- import qualified Data.Vector.Storable as V
 import Control.Monad.State
 import Control.Monad.Reader
+import Control.Applicative
 
 -- Autotuning framework 
 import Auto.Score
@@ -70,7 +71,7 @@ prog = do
           (mandel (fromIntegral imageSize))
 
   let runIt = liftIO $ withCUDA' ctx $ do 
-        allocaVector (fromIntegral (imageSize*imageSize)) $ \o -> do
+        withVector (fromIntegral (imageSize*imageSize)) $ \o -> do
           forM_ [0..count] $ \_ -> do
             o <== (fromIntegral imageSize,kern)
             syncAll
@@ -118,7 +119,9 @@ newtype RandomSearch a =
  deriving ( Monad
           , MonadIO 
           , MonadState (Result, StdGen)
-          , MonadReader Config )
+          , MonadReader Config
+          , Functor
+          , Applicative)
 
 instance SearchMonad RandomSearch where
   type SearchConfig RandomSearch = Config
