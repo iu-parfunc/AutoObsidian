@@ -100,8 +100,9 @@ prog = do
 type Result = Maybe ([Int],Double)
 
 
--- Trying out some method of abstracting the whole thing... 
-class (Monad m, MonadIO m) =>  SearchMonad m where
+-- Trying out some method of abstracting the whole thing...
+-- Config should be further abstracted 
+class (Monad m, MonadIO m) => SearchMonad m where
   runSearch :: Config -> m (Result) -> IO Result   
   getParam :: Int -> m Int
 
