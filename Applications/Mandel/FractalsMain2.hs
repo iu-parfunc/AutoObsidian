@@ -70,6 +70,7 @@ prog = do
           (fromIntegral threads)
           (mandel (fromIntegral imageSize))
 
+  -- Time the body of this instead... 
   let runIt = liftIO $ withCUDA' ctx $ do 
         withVector (fromIntegral (imageSize*imageSize)) $ \o -> do
           forM_ [0..count] $ \_ -> do
