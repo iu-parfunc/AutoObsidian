@@ -100,6 +100,7 @@ prog = do
 
 -- List of parameters and score
 -- Abstract this further ? It allows only Int parameters
+-- and Double results... 
 type Result = Maybe ([Int],Double)
 
 
