@@ -96,7 +96,7 @@ prog = do
 
 
 -- List of parameters and score
--- Abstract this further ? 
+-- Abstract this further ? It allows only Int parameters
 type Result = Maybe ([Int],Double)
 
 
@@ -104,6 +104,8 @@ type Result = Maybe ([Int],Double)
 class (Monad m, MonadIO m) =>  SearchMonad m where
   runSearch :: Config -> m (Result) -> IO Result   
   getParam :: Int -> m Int
+
+
 
 
 data Config = Config {paramRanges :: [(Int,Int)]}
@@ -130,7 +132,9 @@ instance SearchMonad RandomSearch where
   runSearch cfg (RandomSearch m) = do
     stdGen <- newStdGen -- splits some "global" generator
 
-    let m' = forM_ [0..10] $ \_ ->
+    -- Perform just 10 iterations... This should be configurable
+    let m' = forM_ [0..10] $ \experiment_num ->
+          -- experiment_num could be used for something (info printing)
           do
             (r,g) <- get 
             res <- m
@@ -143,7 +147,9 @@ instance SearchMonad RandomSearch where
                   Just (_,old_r) -> if (r' < old_r)
                              then do put (res,g) 
                                      return () 
-                             else return () 
+                             else return ()
+
+            -- TODO: Add a stack of 10 best so far
     
     (a,s) <- runStateT (runReaderT m' cfg) (Nothing,stdGen)
     return (fst s) 
