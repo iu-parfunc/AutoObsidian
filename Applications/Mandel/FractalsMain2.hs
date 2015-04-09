@@ -50,7 +50,7 @@ numBits   = 10
 -- testing 
 main = do
 
-  res <- runSearch (Config [(0,1024)]) (prog :: RandomSearch Result)
+  res <- runSearch (RNDConfig [(0,1024)] 100) (prog :: RandomSearch Result)
 
   putStrLn "Best param"
   putStrLn $ show res 
@@ -109,22 +109,21 @@ class (Monad m, MonadIO m) => SearchMonad m where
   runSearch :: SearchConfig m -> m (Result) -> IO Result   
   getParam :: Int -> m Int
 
-
-
-
-data Config = Config {paramRanges :: [(Int,Int)]}
+-- Config for Random search 
+data RNDConfig = RNDConfig { paramRanges :: [(Int,Int)]
+                           , numIters :: Int }
 
 newtype RandomSearch a =
-  RandomSearch (ReaderT Config (StateT (Result,StdGen)  IO)  a) 
+  RandomSearch (ReaderT RNDConfig (StateT (Result,StdGen)  IO)  a) 
  deriving ( Monad
           , MonadIO 
           , MonadState (Result, StdGen)
-          , MonadReader Config
+          , MonadReader RNDConfig
           , Functor
           , Applicative)
 
 instance SearchMonad RandomSearch where
-  type SearchConfig RandomSearch = Config
+  type SearchConfig RandomSearch = RNDConfig
   getParam i = do
     cfg <- ask
     --- Here --- 
@@ -139,8 +138,8 @@ instance SearchMonad RandomSearch where
   runSearch cfg (RandomSearch m) = do
     stdGen <- newStdGen -- splits some "global" generator
 
-    -- Perform just 10 iterations... This should be configurable
-    let m' = forM_ [0..10] $ \experiment_num ->
+    -- number of runs is now configurable
+    let m' = forM_ [1..(numIters cfg)] $ \experiment_num ->
           -- experiment_num could be used for something (info printing)
           do
             (r,g) <- get 
