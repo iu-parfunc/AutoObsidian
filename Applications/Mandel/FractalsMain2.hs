@@ -4,6 +4,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies #-} 
 
 module Main where
 
@@ -101,9 +102,10 @@ type Result = Maybe ([Int],Double)
 
 
 -- Trying out some method of abstracting the whole thing...
--- Config should be further abstracted 
+
 class (Monad m, MonadIO m) => SearchMonad m where
-  runSearch :: Config -> m (Result) -> IO Result   
+  type SearchConfig m 
+  runSearch :: SearchConfig m -> m (Result) -> IO Result   
   getParam :: Int -> m Int
 
 
@@ -119,6 +121,7 @@ newtype RandomSearch a =
           , MonadReader Config )
 
 instance SearchMonad RandomSearch where
+  type SearchConfig RandomSearch = Config
   getParam i = do
     cfg <- ask
     --- Here --- 
