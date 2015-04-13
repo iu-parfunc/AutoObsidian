@@ -49,6 +49,8 @@ cabal-version:       >=1.10
 library
   -- Modules exported by the library.
   exposed-modules: Auto.Score
+                 , Auto.SearchMonad
+                 , Auto.RandomSearch
   
   -- Modules included in this library but not exported.
   -- other-modules:       
@@ -61,7 +63,9 @@ library
                , mtl >=2.2 && <2.3
                , containers >=0.5 && <0.6
                , array >=0.5
-  
+               , random
+               , transformers >= 0.4.2.0 && < 0.5
+   
   -- Directories containing source files.
   -- hs-source-dirs:      
   
