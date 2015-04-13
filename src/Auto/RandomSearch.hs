@@ -15,24 +15,25 @@ import System.Random (randomR, StdGen, newStdGen)
 import Auto.SearchMonad 
 
 -- Config for Random search 
-data RNDConfig = RNDConfig { paramRanges :: [(Int,Int)]
-                           , numIters :: Int }
+data Config = Config { paramRanges :: [(Int,Int)]
+                     , numIters :: Int }
 
 newtype RandomSearch a =
-  RandomSearch (ReaderT RNDConfig (StateT (Result,StdGen)  IO)  a) 
+  RandomSearch (ReaderT Config (StateT (Result,StdGen)  IO)  a) 
  deriving ( Monad
           , MonadIO 
           , MonadState (Result, StdGen)
-          , MonadReader RNDConfig
+          , MonadReader Config
           , Functor
           , Applicative)
 
 instance SearchMonad RandomSearch where
-  type SearchConfig RandomSearch = RNDConfig
+  type SearchConfig RandomSearch = Config
   getParam i = do
     cfg <- ask
     --- Here --- 
-    (r,g) <- get   
+    (r,g) <- get
+    -- Add error checking ! 
     let range = (paramRanges cfg) !! i
         (a,g') = randomR range g
     put (r,g')

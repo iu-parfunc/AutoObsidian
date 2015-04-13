@@ -19,7 +19,8 @@ import Obsidian.Run.CUDA.Exec
 -- Autotuning framework 
 import Auto.Score
 import Auto.SearchMonad
-import Auto.RandomSearch 
+import Auto.RandomSearch as RS
+import Auto.ExhaustiveSearch as ES 
 
 -- -- timing
 import Data.Time.Clock
@@ -45,8 +46,10 @@ numBits   = 10
 -- testing 
 main = do
 
-  res <- runSearch (RNDConfig [(0,1024)] 100) (prog :: RandomSearch Result)
+  --res <- runSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result)
 
+  res <- runSearch (ES.Config [[32,64,128,256]]) (prog :: ExhaustiveSearch Result)
+  
   putStrLn "Best param"
   putStrLn $ show res 
 
