@@ -52,6 +52,7 @@ library
                  , Auto.SearchMonad
                  , Auto.RandomSearch
                  , Auto.ExhaustiveSearch
+                 , Auto.ResultLog
   
   -- Modules included in this library but not exported.
   -- other-modules:       

@@ -1,6 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-} 
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Auto.RandomSearch where
 
@@ -12,31 +14,33 @@ import Control.Applicative
 
 import System.Random (randomR, StdGen, newStdGen)
 
-import Auto.SearchMonad 
+import Auto.SearchMonad
+import Auto.ResultLog
 
 -- Config for Random search 
 data Config = Config { paramRanges :: [(Int,Int)]
                      , numIters :: Int }
 
-newtype RandomSearch a =
-  RandomSearch (ReaderT Config (StateT (Result,StdGen)  IO)  a) 
+newtype RandomSearch result a =
+  RandomSearch (ReaderT Config (StateT ( StdGen
+                                       , ResultLog result)  IO)  a) 
  deriving ( Monad
           , MonadIO 
-          , MonadState (Result, StdGen)
+          , MonadState (StdGen, ResultLog result)
           , MonadReader Config
           , Functor
           , Applicative)
 
-instance SearchMonad RandomSearch where
+instance Ord result => SearchMonad result RandomSearch where
   type SearchConfig RandomSearch = Config
   getParam i = do
     cfg <- ask
     --- Here --- 
-    (r,g) <- get
+    (g,r) <- get
     -- Add error checking ! 
     let range = (paramRanges cfg) !! i
         (a,g') = randomR range g
-    put (r,g')
+    put (g',r)
     --- To here -- can be replaced with a modify 
     return a 
 
@@ -48,20 +52,33 @@ instance SearchMonad RandomSearch where
     let m' = forM_ [1..(numIters cfg)] $ \experiment_num ->
           -- experiment_num could be used for something (info printing)
           do
-            (r,g) <- get 
-            res <- m
-            case res of
-              Nothing -> put(r,g) 
-              Just (params,r') -> 
-                case r of -- if old r is nothing, replace with new
-                  Nothing -> put (res,g) 
-                  --otherwise compare
-                  Just (_,old_r) -> if (r' < old_r)
-                             then do put (res,g) 
-                                     return () 
-                             else return ()
-
-            -- TODO: Add a stack of 10 best so far
+            
+            m_res <- m
+            
+            (g,rlog) <- get 
     
-    (a,s) <- runStateT (runReaderT m' cfg) (Nothing,stdGen)
-    return (fst s) 
+            let rlog' =
+                  case m_res of
+                    Nothing -> rlog
+                    Just r -> addResult rlog r
+
+            put (g,rlog')
+            
+            -- case res of
+            --   Nothing -> put(r,g) 
+            --   Just (params,r') -> 
+            --     case r of -- if old r is nothing, replace with new
+            --       Nothing -> put (res,g) 
+            --       --otherwise compare
+            --       Just (_,old_r) -> if (r' < old_r)
+            --                  then do put (res,g) 
+            --                          return () 
+            --                  else return ()
+
+            -- -- TODO: Add a stack of 10 best so far
+    
+    (a,s) <- runStateT (runReaderT m' cfg)
+                       ( stdGen
+                      , ResultLog (mkFLIFO $ Just 10)
+                                  (Just $ mkFLIFO Nothing))
+    return $ peek (resultLogBest (snd s))

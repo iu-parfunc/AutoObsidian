@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-} 
+{-# LANGUAGE FlexibleContexts #-} 
 
 module Main where
 
@@ -33,6 +34,12 @@ import Data.Time.Clock
 --exception
 import Control.Exception
 
+
+data Result = Result ([Int],Double)
+
+instance Ord Result where
+  compare (Result (_,d1)) (Result (_,d2)) = compare d1 d2 
+
 -- parameters
 -- threads   = 256
 blocks, imageSize, identity, count, maxNum, numBits :: Int
@@ -46,15 +53,18 @@ numBits   = 10
 -- testing 
 main = do
 
-  --res <- runSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result)
+  res <- runSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
+  putStrLn "Best param"
+  putStrLn $ show res 
 
-  res <- runSearch (ES.Config [[32,64,128,256]]) (prog :: ExhaustiveSearch Result)
+
+  res <- runSearch (ES.Config [[32,64,128,256]]) (prog :: ExhaustiveSearch Result (Maybe Result))
   
   putStrLn "Best param"
   putStrLn $ show res 
 
 
-prog :: SearchMonad m => m (Result)
+prog :: SearchMonad Result m => m Result (Maybe Result)
 prog = do
   -- This needs to be made part of the configuration of the search 
   ctx <- liftIO $ initialise
@@ -87,7 +97,7 @@ prog = do
               let timed = realToFrac $ diffUTCTime t1 t0
               putStrLn $ "Time for " ++ (show threads) ++ " was " ++ (show timed)
               destroyCtx ctx
-              return $ Just ([threads],timed)
+              return $ Just $ Result ([threads],timed)
 
          )
          (\e -> do putStrLn (show (e :: SomeException))
