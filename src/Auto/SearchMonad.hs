@@ -26,6 +26,8 @@ import Control.Monad.IO.Class
 -- TODO: Abstract this further
 -- It allows only Int parameters and Double results...
 
+-- TODO: I think that runSearch
+--       should return a full resultLog!
 
 class ( Ord result
       , Monad (m result)
