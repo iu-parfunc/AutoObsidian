@@ -11,7 +11,7 @@ module Auto.BitClimbSearch where
 import Control.Monad.State
 import Control.Monad.Reader
 import Control.Applicative
-import System.Random (StdGen, newStdGen, randomRs, split)
+import System.Random 
 import Data.Array
 import Auto.SearchMonad
 import Auto.ResultLog
@@ -25,9 +25,11 @@ data Config = Config { numBits   :: Int
                      , numIters  :: Int
                      }
 
--- The search needs to keep track of the current bit
+-- The search needs to keep track of the current bitstring
+-- and maybe the evaluated result
 type SearchState result = ( StdGen
                           , Array Int BitString
+                          , Maybe result
                           , ResultLog result
                           )
 
@@ -45,42 +47,33 @@ instance Ord result => SearchMonad result BitClimbSearch where
   type SearchConfig BitClimbSearch = Config
 
   getParam i = do
-    (_,bstr,_) <- get
+    (_,bstr,_,_) <- get
     return $ bitStringToNum $ bstr ! i
 
   runSearch cfg (BitClimbSearch m) = do
     stdGen <- newStdGen
     let (g', g'') = split stdGen
         init = makeIndividual (numBits cfg) (numParams cfg) g'
-        setBit b p = do
-          (g,bstr,rlog) <- get
-          let bstr' = flipBitAt b p bstr
-          put (g,bstr',rlog)
-          return ()
+        resComp p1@(Just res1, _) p2@(Just res2, _) =
+          if res1 < res2 then p1 else p2
+        resComp a@(Just _, _) (Nothing,_) = a
+        resComp (Nothing,_) a = a
         testBit b p = do
-          (g,bstr,rlog) <- get
-          setBit b p
-          mRes <- m
-          put (g,bstr,rlog)
-          return mRes
-        -- Maybe rewrite the following to use a single test per
-        -- experiment, and choose the bit to consider randomly. 
-        m' = forM_ [1..(numIters cfg)] $ \_experimentNum -> do
-          -- Should abort when we can't improve the current answer
-          res <- forM [(b,p) |
-                       b <- [0..(numBits cfg)-1],
-                       p <- [0..(numParams cfg)-1]]
-                 $ \(b,p) -> do
-            -- Currently searches all neighbors. Instead it should stop
-            -- when it finds one that is better than the current state.
-            mRes <- testBit b p
-            return (mRes,b,p)
-          (g,bstr,rlog) <- get
+          (g,bstr,res,rlog) <- get
+          let bstrNew = flipBitAt b p bstr
+          put (g,bstrNew,Nothing,rlog)
+          resNew <- m
+          let (resBest,bstrBest) = resComp (resNew,bstrNew) (res,bstr)
+          put (g,bstrBest,resBest,rlog)
           return ()
-          -- let rlog' = case mRes of
-          --       Nothing -> rlog
-          --       Just r  -> addResult rlog r
-          -- put (g,bstr,rlog')
-    (_,(_,_,rlog)) <- runStateT (runReaderT m' cfg)
-                      (g'', init, ResultLog (mkFLIFO $ Just 10) (Just $ mkFLIFO Nothing))
+        m' = forM_ [1..(numIters cfg)] $ \_experimentNum -> do
+          (g,bstr,res,rlog) <- get
+          let (r1,g')  = randomR (0,(numBits cfg)-1) g
+              (r2,g'') = randomR (0,(numParams cfg)-1) g'
+          put (g'',bstr,res,rlog)
+          testBit r1 r2
+          return ()
+    (_,(_,_,_,rlog)) <- runStateT (runReaderT m' cfg)
+                        (g'', init, Nothing,
+                         ResultLog (mkFLIFO $ Just 10) (Just $ mkFLIFO Nothing))
     return $ peek $ resultLogBest rlog
