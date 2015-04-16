@@ -5,11 +5,14 @@ module Auto.Score
        , mutateBitString
        , crossBitString
        , numToBitString
+       , makeIndividual
+       , makePopulation
+       , flipBitAt
        )
        where
 
 import Data.Array
--- import Data.Array.Unboxed (UArray)
+import System.Random
 
 type ScoreType = Double 
 
@@ -20,7 +23,7 @@ type BitString = Array Int Bool
 
 -- Make a bitstring of size i.
 makeBitString :: Int -> BitString
-makeBitString i = array (0,i) [(j,False) | j <- [0..i]]
+makeBitString i = array (0,i-1) [(j,False) | j <- [0..i-1]]
 
 -- Convert bitstring to number.
 bitStringToNum :: BitString -> Int
@@ -52,3 +55,19 @@ numToBits y = let (a,b) = quotRem y 2 in [b] ++ numToBits a
 numToBitString :: Int -> Int -> BitString
 numToBitString i s = makeBitString s // str
   where str = zip [0..] $ map (== 1) $ numToBits i
+
+makeIndividual :: Int -> Int -> StdGen -> Array Int BitString
+makeIndividual bits params g = listArray (0,params-1) strings
+  where nums = take params $ randomRs (0, 2 ^ bits - 1) g
+        strings = map (flip numToBitString bits) nums
+
+makePopulation :: Int -> Int -> Int -> StdGen -> [Array Int BitString]
+makePopulation 0 _ _ _ = []
+makePopulation popSize bits params g = ind : restPop
+  where (g',g'') = split g
+        restPop = makePopulation (popSize-1) bits params g''
+        ind = makeIndividual bits params g'
+
+flipBitAt :: Int -> Int -> Array Int BitString -> Array Int BitString
+flipBitAt b p bstr = bstr // [(p,ind)]
+  where ind = mutateBitString (bstr ! p) b
