@@ -56,7 +56,7 @@ bitCount  = 10
 main = do
 
   putStrLn "Bit climb search"
-  res <- runSearch (BS.Config bitCount 1 100) (prog :: BitClimbSearch Result (Maybe Result))
+  res <- runSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
   putStrLn "Best param"
   putStrLn $ show res
 

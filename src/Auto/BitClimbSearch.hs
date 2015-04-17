@@ -23,6 +23,7 @@ import Auto.Score
 data Config = Config { numBits   :: Int
                      , numParams :: Int
                      , numIters  :: Int
+                     , verbose   :: Bool
                      }
 
 -- The search needs to keep track of the current bitstring
@@ -43,7 +44,7 @@ newtype BitClimbSearch result a =
            , Applicative
            )
 
-instance Ord result => SearchMonad result BitClimbSearch where
+instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
   type SearchConfig BitClimbSearch = Config
 
   -- I should clean up all the get/put stuff into something
@@ -73,7 +74,13 @@ instance Ord result => SearchMonad result BitClimbSearch where
           resNew <- m
           let (resBest,bstrBest) = resComp (resNew,bstrNew) (res,bstr)
           put (g,bstrBest,resBest,rlog)
-          return ()
+          if (verbose cfg)
+            then do
+            liftIO $ putStrLn $ "Current best: " ++ (show resBest)
+            liftIO $ putStrLn $ "Moving state: " ++ (show $ resBest == resNew)
+            return ()
+            else
+            return ()
         
         m' = forM_ [1..(numIters cfg)] $ \_experimentNum -> do
           (g,bstr,res,rlog) <- get
