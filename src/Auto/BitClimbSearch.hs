@@ -46,18 +46,26 @@ newtype BitClimbSearch result a =
 instance Ord result => SearchMonad result BitClimbSearch where
   type SearchConfig BitClimbSearch = Config
 
+  -- I should clean up all the get/put stuff into something
+  -- more straightforward. It's hard to follow as it is.
+
   getParam i = do
     (_,bstr,_,_) <- get
     return $ bitStringToNum $ bstr ! i
 
   runSearch cfg (BitClimbSearch m) = do
     stdGen <- newStdGen
+    
     let (g', g'') = split stdGen
         init = makeIndividual (numBits cfg) (numParams cfg) g'
+
+        -- Compare two results
         resComp p1@(Just res1, _) p2@(Just res2, _) =
-          if res1 < res2 then p1 else p2
+          if res1 <= res2 then p1 else p2
         resComp a@(Just _, _) (Nothing,_) = a
         resComp (Nothing,_) a = a
+
+        -- Try a mutation and keep it if it's better than the current result
         testBit b p = do
           (g,bstr,res,rlog) <- get
           let bstrNew = flipBitAt b p bstr
@@ -66,6 +74,7 @@ instance Ord result => SearchMonad result BitClimbSearch where
           let (resBest,bstrBest) = resComp (resNew,bstrNew) (res,bstr)
           put (g,bstrBest,resBest,rlog)
           return ()
+        
         m' = forM_ [1..(numIters cfg)] $ \_experimentNum -> do
           (g,bstr,res,rlog) <- get
           let (r1,g')  = randomR (0,(numBits cfg)-1) g
@@ -73,6 +82,7 @@ instance Ord result => SearchMonad result BitClimbSearch where
           put (g'',bstr,res,rlog)
           testBit r1 r2
           return ()
+          
     (_,(_,_,_,rlog)) <- runStateT (runReaderT m' cfg)
                         (g'', init, Nothing,
                          ResultLog (mkFLIFO $ Just 10) (Just $ mkFLIFO Nothing))

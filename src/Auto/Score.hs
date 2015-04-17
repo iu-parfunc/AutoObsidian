@@ -14,10 +14,10 @@ module Auto.Score
 import Data.Array
 import System.Random
 
-type ScoreType = Double 
+-- type ScoreType = Double 
 
-class Score a where
-  score :: a -> ScoreType
+-- class Score a where
+--   score :: a -> ScoreType
 
 type BitString = Array Int Bool
 

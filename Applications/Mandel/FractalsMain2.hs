@@ -21,15 +21,11 @@ import Obsidian.Run.CUDA.Exec
 import Auto.Score
 import Auto.SearchMonad
 import Auto.RandomSearch as RS
-import Auto.ExhaustiveSearch as ES 
+import Auto.ExhaustiveSearch as ES
+import Auto.BitClimbSearch as BS
 
 -- -- timing
 import Data.Time.Clock
-
--- import Criterion.Main
--- import Criterion.Types 
--- import Criterion.Monad
--- import Criterion.Internal
 
 --exception
 import Control.Exception
@@ -37,32 +33,42 @@ import Control.Exception
 
 data Result = Result ([Int],Double)
 
+instance Eq Result where
+  (Result (_,d1)) == (Result (_,d2)) = d1 == d2
+
 instance Ord Result where
-  compare (Result (_,d1)) (Result (_,d2)) = compare d1 d2 
+  compare (Result (_,d1)) (Result (_,d2)) = compare d1 d2
+
+instance Show Result where
+  show (Result (_,r)) = show r
 
 -- parameters
 -- threads   = 256
-blocks, imageSize, identity, count, maxNum, numBits :: Int
+blocks, imageSize, identity, count, maxNum, bitCount :: Int
 blocks    = 64
 imageSize = 1024
 identity  = 256
 count     = 10
 maxNum    = 960
-numBits   = 10
+bitCount  = 10
 
 -- testing 
 main = do
 
+  putStrLn "Bit climb search"
+  res <- runSearch (BS.Config bitCount 1 100) (prog :: BitClimbSearch Result (Maybe Result))
+  putStrLn "Best param"
+  putStrLn $ show res
+
+  putStrLn "Random search"
   res <- runSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
   putStrLn "Best param"
   putStrLn $ show res 
 
-
+  putStrLn "Exhaustive search"
   res <- runSearch (ES.Config [[32,64,128,256]]) (prog :: ExhaustiveSearch Result (Maybe Result))
-  
   putStrLn "Best param"
-  putStrLn $ show res 
-
+  putStrLn $ show res
 
 prog :: SearchMonad Result m => m Result (Maybe Result)
 prog = do

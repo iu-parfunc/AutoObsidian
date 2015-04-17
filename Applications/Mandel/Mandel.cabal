@@ -48,7 +48,7 @@ cabal-version:       >=1.10
 
 executable Mandel
   -- .hs or .lhs file containing the Main module.
-  main-is:             FractalsMain.hs
+  main-is:             FractalsMain2.hs
   
   -- Modules included in this executable, other than Main.
   -- other-modules:       
@@ -72,7 +72,7 @@ executable Mandel
                , Obsidian == 0.4.0.0
                , criterion 
                , AutoObsidian
-               , GA
+               -- , GA
                , random
   
   -- Directories containing source files.
