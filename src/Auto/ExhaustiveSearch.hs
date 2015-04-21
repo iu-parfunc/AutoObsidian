@@ -35,19 +35,21 @@ instance Ord result => SearchMonad result ExhaustiveSearch where
 
   getParam i = do
     (params,_) <- get
-    -- Add error checking 
-    return (params !! i)  
+    
+    -- Add error checking
+    if (i > length params - 1 || i < 0)
+      then error "Exhaustive: getParam" 
+      else return (params !! i)  
     
                   
 
   runSearch cfg (ExhaustiveSearch m) = do
 
     
-    let m' combos= forM_ combos $ \params ->
+    let m' combos = forM_ combos $ \params ->
           do
-            -- remove best from state.. the log is enough 
             (old_params,rlog) <- get
-            -- put (old_best,params) -- pointless
+            put (params,rlog) 
             
             m_res <- m 
     
@@ -58,17 +60,6 @@ instance Ord result => SearchMonad result ExhaustiveSearch where
 
             put (old_params, rlog')
             
-            -- case res of
-            --   Nothing -> return ()  -- put (r,params) -- params are junk by now
-            --   -- Just (r_params,r') ->
-            --   Just res -> 
-
-                
-            --     case r of
-            --       Nothing -> put (res, params) -- params are junk
-            --       Just (_,old_r) -> if (r' < old_r)
-            --                         then put (res,params)
-            --                         else return ()
     let m'' = do cfg <- ask
                  let combos = sequence $ paramLists cfg
                  m' combos 

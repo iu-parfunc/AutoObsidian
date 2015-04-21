@@ -31,6 +31,7 @@ import Data.Time.Clock
 import Control.Exception
 
 
+
 data Result = Result ([Int],Double)
 
 instance Eq Result where
@@ -55,15 +56,15 @@ bitCount  = 10
 -- testing 
 main = do
 
-  putStrLn "Bit climb search"
-  res <- runSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
-  putStrLn "Best param"
-  putStrLn $ show res
+  -- putStrLn "Bit climb search"
+  -- res <- runSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
+  -- putStrLn "Best param"
+  -- putStrLn $ show res
 
-  putStrLn "Random search"
-  res <- runSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
-  putStrLn "Best param"
-  putStrLn $ show res 
+  -- putStrLn "Random search"
+  -- res <- runSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
+  -- putStrLn "Best param"
+  -- putStrLn $ show res 
 
   putStrLn "Exhaustive search"
   res <- runSearch (ES.Config [[32,64,128,256]]) (prog :: ExhaustiveSearch Result (Maybe Result))
@@ -72,43 +73,51 @@ main = do
 
 prog :: SearchMonad Result m => m Result (Maybe Result)
 prog = do
+  
   -- This needs to be made part of the configuration of the search 
   ctx <- liftIO $ initialise
-
-  threads <- getParam 0 
+  
+  threads <- getParam 0
   
   liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
 
-  kern <- liftIO $ captureIO ("kernel" ++ show identity)
-          (props ctx)
-          (fromIntegral threads)
-          (mandel (fromIntegral imageSize))
 
-  -- Time the body of this instead... 
-  let runIt = liftIO $ withCUDA' ctx $ do 
-        withVector (fromIntegral (imageSize*imageSize)) $ \o -> do
-          forM_ [0..count] $ \_ -> do
-            o <== (fromIntegral imageSize,kern)
-            syncAll
-            copyOut o
-  if threads == 0
-    then return Nothing
-    else liftIO $ catch
-         ( do
-              -- This could be criterion instead, but it was complicated
-              t0   <- getCurrentTime
-              runIt >> return ()
-              t1   <- getCurrentTime
+  if (threads <= 0)
+    then do liftIO $ destroyCtx ctx
+            return $ Nothing
+    else body ctx threads 
 
-              let timed = realToFrac $ diffUTCTime t1 t0
-              putStrLn $ "Time for " ++ (show threads) ++ " was " ++ (show timed)
-              destroyCtx ctx
-              return $ Just $ Result ([threads],timed)
+  where 
+    body ctx threads = do 
+      kern <- liftIO $ captureIO ("kernel" ++ show identity)
+                                 (props ctx)
+                                 (fromIntegral threads)
+                                 (mandel (fromIntegral imageSize))
 
-         )
-         (\e -> do putStrLn (show (e :: SomeException))
-                   destroyCtx ctx 
-                   return Nothing
-         )
+      -- Time the body of this instead... 
+      let runIt =
+            liftIO $ withCUDA' ctx $ do 
+              withVector (fromIntegral (imageSize*imageSize)) $ \o -> do
+                forM_ [0..count] $ \_ -> do
+                  o <== (fromIntegral imageSize,kern)
+                  syncAll
+                  copyOut o
+      liftIO $ catch
+        ( do
+             -- This could be criterion instead, but it was complicated
+             t0   <- getCurrentTime
+             runIt >> return ()
+             t1   <- getCurrentTime
+
+             let timed = realToFrac $ diffUTCTime t1 t0
+             putStrLn $ "Time for " ++ (show threads) ++ " was " ++ (show timed)
+             destroyCtx ctx
+             return $ Just $ Result ([threads],timed)
+
+        )
+        (\e -> do putStrLn (show (e :: SomeException))
+                  destroyCtx ctx 
+                  return Nothing
+        )
 
 
