@@ -56,15 +56,15 @@ bitCount  = 10
 -- testing 
 main = do
 
-  -- putStrLn "Bit climb search"
-  -- res <- runSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
-  -- putStrLn "Best param"
-  -- putStrLn $ show res
+  putStrLn "Bit climb search"
+  res <- runSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
+  putStrLn "Best param"
+  putStrLn $ show res
 
-  -- putStrLn "Random search"
-  -- res <- runSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
-  -- putStrLn "Best param"
-  -- putStrLn $ show res 
+  putStrLn "Random search"
+  res <- runSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
+  putStrLn "Best param"
+  putStrLn $ show res 
 
   putStrLn "Exhaustive search"
   res <- runSearch (ES.Config [[32,64,128,256]]) (prog :: ExhaustiveSearch Result (Maybe Result))
