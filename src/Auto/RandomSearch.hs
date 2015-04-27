@@ -63,19 +63,6 @@ instance Ord result => SearchMonad result RandomSearch where
                     Just r -> addResult rlog r
 
             put (g,rlog')
-            
-            -- case res of
-            --   Nothing -> put(r,g) 
-            --   Just (params,r') -> 
-            --     case r of -- if old r is nothing, replace with new
-            --       Nothing -> put (res,g) 
-            --       --otherwise compare
-            --       Just (_,old_r) -> if (r' < old_r)
-            --                  then do put (res,g) 
-            --                          return () 
-            --                  else return ()
-
-            -- -- TODO: Add a stack of 10 best so far
     
     (a,s) <- runStateT (runReaderT m' cfg)
                        ( stdGen
