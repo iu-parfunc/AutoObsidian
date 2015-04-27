@@ -93,4 +93,4 @@ instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
     (_,(_,_,_,rlog)) <- runStateT (runReaderT m' cfg)
                         (g'', init, Nothing,
                          ResultLog (mkFLIFO $ Just 10) (Just $ mkFLIFO Nothing))
-    return $ peek $ resultLogBest rlog
+    return $ rlog -- $ peek $ resultLogBest rlog

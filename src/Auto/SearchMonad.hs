@@ -22,6 +22,9 @@ module Auto.SearchMonad
 import Control.Monad
 import Control.Monad.IO.Class
 
+
+import Auto.ResultLog 
+
 -- List of parameters and score
 -- TODO: Abstract this further
 -- It allows only Int parameters and Double results...
@@ -32,7 +35,12 @@ import Control.Monad.IO.Class
 class ( Ord result
       , Monad (m result)
       , MonadIO (m result) ) => SearchMonad result m where
-  type SearchConfig m 
-  runSearch :: SearchConfig m -> m result (Maybe result) -> IO (Maybe result)
+  
+  type SearchConfig m
+  
+  runSearch :: SearchConfig m
+            -> m result (Maybe result)
+            -> IO (ResultLog result)
+            
   getParam :: Int -> m result Int
 
