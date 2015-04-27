@@ -19,6 +19,7 @@ import Obsidian.Run.CUDA.Exec
 
 -- Autotuning framework 
 import Auto.Score
+import Auto.ResultLog 
 import Auto.SearchMonad
 import Auto.RandomSearch as RS
 import Auto.ExhaustiveSearch as ES
@@ -59,17 +60,17 @@ main = do
   putStrLn "Bit climb search"
   res <- runSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
   putStrLn "Best param"
-  putStrLn $ show res
+  putStrLn $ show $ peek $ resultLogBest res
 
   putStrLn "Random search"
   res <- runSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
   putStrLn "Best param"
-  putStrLn $ show res 
+  putStrLn $ show $ peek $ resultLogBest res 
 
   putStrLn "Exhaustive search"
   res <- runSearch (ES.Config [[32,64,128,256]]) (prog :: ExhaustiveSearch Result (Maybe Result))
   putStrLn "Best param"
-  putStrLn $ show res
+  putStrLn $ show $ peek $ resultLogBest res
 
 prog :: SearchMonad Result m => m Result (Maybe Result)
 prog = do
