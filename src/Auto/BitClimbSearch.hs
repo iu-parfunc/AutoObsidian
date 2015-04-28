@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies #-} 
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
@@ -11,11 +11,12 @@ module Auto.BitClimbSearch where
 import Control.Monad.State
 import Control.Monad.Reader
 import Control.Applicative
-import System.Random 
+import System.Random
 import Data.Array
 import Auto.SearchMonad
 import Auto.ResultLog
 import Auto.Score
+import Prelude hiding (init)
 
 -- We're using bitstrings to store numbers internally, so we need to
 -- parameterize the search with the number of bits to use for our
@@ -56,7 +57,7 @@ instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
 
   runSearch cfg (BitClimbSearch m) = do
     stdGen <- newStdGen
-    
+
     let (g', g'') = split stdGen
         init = makeIndividual (numBits cfg) (numParams cfg) g'
 
@@ -81,15 +82,15 @@ instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
             return ()
             else
             return ()
-        
+
         m' = forM_ [1..(numIters cfg)] $ \_experimentNum -> do
           (g,bstr,res,rlog) <- get
-          let (r1,g')  = randomR (0,(numBits cfg)-1) g
-              (r2,g'') = randomR (0,(numParams cfg)-1) g'
-          put (g'',bstr,res,rlog)
+          let (r1,g1)  = randomR (0,(numBits cfg)-1) g
+              (r2,g2) = randomR (0,(numParams cfg)-1) g1
+          put (g2,bstr,res,rlog)
           testBit r1 r2
           return ()
-          
+
     (_,(_,_,_,rlog)) <- runStateT (runReaderT m' cfg)
                         (g'', init, Nothing,
                          ResultLog (mkFLIFO $ Just 10) (Just $ mkFLIFO Nothing))

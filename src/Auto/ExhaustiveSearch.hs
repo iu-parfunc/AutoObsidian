@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies #-} 
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
@@ -21,9 +21,9 @@ data Config = Config { paramLists :: [[Int]] }
 
 newtype ExhaustiveSearch result a =
   ExhaustiveSearch (ReaderT Config (StateT ([Int]
-                                           , ResultLog result) IO) a) 
+                                           , ResultLog result) IO) a)
  deriving ( Monad
-          , MonadIO 
+          , MonadIO
           , MonadState ([Int], ResultLog result)
           , MonadReader Config
           , Functor
@@ -35,39 +35,37 @@ instance Ord result => SearchMonad result ExhaustiveSearch where
 
   getParam i = do
     (params,_) <- get
-    
+
     -- Add error checking
     if (i > length params - 1 || i < 0)
-      then error "Exhaustive: getParam" 
-      else return (params !! i)  
-    
-                  
+      then error "Exhaustive: getParam"
+      else return (params !! i)
+
+
 
   runSearch cfg (ExhaustiveSearch m) = do
 
-    
+
     let m' combos = forM_ combos $ \params ->
           do
             (old_params,rlog) <- get
-            put (params,rlog) 
-            
-            m_res <- m 
-    
+            put (params,rlog)
+
+            m_res <- m
+
             let rlog' =
                   case m_res of
                     Nothing -> rlog
-                    Just r  -> addResult rlog r 
+                    Just r  -> addResult rlog r
 
             put (old_params, rlog')
-            
-    let m'' = do cfg <- ask
-                 let combos = sequence $ paramLists cfg
-                 m' combos 
-    
-        
-    (a,s) <- runStateT (runReaderT m'' cfg)
-                       ( []
-                       , ResultLog (mkFLIFO $ Just 10)
-                                   (Just $ mkFLIFO Nothing))
+
+    let m'' = do cfg' <- ask
+                 let combos = sequence $ paramLists cfg'
+                 m' combos
+
+    (_a,s) <- runStateT (runReaderT m'' cfg)
+                        ( []
+                        , ResultLog (mkFLIFO $ Just 10)
+                                    (Just $ mkFLIFO Nothing))
     return $ snd s -- $ peek (resultLogBest (snd s))
-        
