@@ -85,7 +85,9 @@ buildIt kernel_th = do
 
 runIt :: IO Double
 runIt = do
-  (_,Just sout,Just serr,ph) <- createProcess $ shell cmd
+  (_,Just sout,Just serr,ph) <- createProcess (shell cmd)
+                                 {std_out = CreatePipe
+                                 ,std_err = CreatePipe }
 
   -- should look at output for
   -- "cuda event timer: 0.017409 s, or 17.409281 ms" 
