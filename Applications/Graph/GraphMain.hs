@@ -89,7 +89,7 @@ runIt = do
   return 5.0
   where
     -- with default params 
-    cmd = "./main 20 16 0 0" 
+    cmd = "(cd ./gpu_graph/iu_bfsdp; ./main 20 16 0 0)" 
     -- num nodes (2^X)
     -- fanout per node
     -- I forgot
