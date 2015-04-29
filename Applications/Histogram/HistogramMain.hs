@@ -51,15 +51,21 @@ instance Show Result where
 
 main :: IO ()
 main = do
+
+  -- Same vector for all runs, or pointless! 
+  (inputs' :: V.Vector Word32) <- mkRandomVec (1024*1024)
+  let inputs = V.map (`mod` 1024) $ inputs'
+    
+  
   putStrLn "Exhaustive search"
-  res <- execSearch (ES.Config [[32,64,128,256],[16,32,48,64]]) (prog :: ExhaustiveSearch Result (Maybe Result))
+  res <- execSearch (ES.Config [[32,64,128,256],[16,32,48,64]]) (prog inputs :: ExhaustiveSearch Result (Maybe Result))
   putStrLn "Best param"
   putStrLn $ show $ peek $ resultLogBest res
 
   
                      
-prog :: SearchMonad Result m => m Result (Maybe Result)
-prog = do
+prog :: SearchMonad Result m => V.Vector Word32 -> m Result (Maybe Result)
+prog inputs = do
   ctx <- liftIO initialise
 
 
@@ -74,9 +80,6 @@ prog = do
              return Nothing
     else body ctx threads blocks
 
-
-  
-
   where
     body :: SearchMonad Result m => Context -> Int -> Int -> m Result (Maybe Result) 
     body ctx threads blocks = do
@@ -84,8 +87,6 @@ prog = do
                                  (fromIntegral threads)
                                  (histogram 1024 1024)
 
-      (inputs' :: V.Vector Word32) <- liftIO $ mkRandomVec (1024*1024)
-      let inputs = V.map (`mod` 1024) $ inputs'
       
 
       let runIt =
