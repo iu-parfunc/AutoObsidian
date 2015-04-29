@@ -95,7 +95,10 @@ runIt = do
   let ls = lines output
   putStrLn $ show (length ls) ++ " LINES HARVESTERED"
 
-  putStrLn $ show (ls !! 3) 
+  putStrLn $ show (ls !! 3)
+  putStrLn $ show (ls !! 4)
+  putStrLn $ show (ls !! 5)
+  
   
   waitForProcess ph
   return 5.0
