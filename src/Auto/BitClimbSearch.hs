@@ -47,6 +47,8 @@ newtype BitClimbSearch result a =
 
 instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
   type SearchConfig BitClimbSearch = Config
+  type SearchAux    BitClimbSearch =
+    (StdGen, Array Int BitString) -- problem getting the Maybe result out here 
 
   -- I should clean up all the get/put stuff into something
   -- more straightforward. It's hard to follow as it is.
@@ -91,7 +93,7 @@ instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
           testBit r1 r2
           return ()
 
-    (_,(_,_,_,rlog)) <- runStateT (runReaderT m' cfg)
+    (_,(stdg,a,_,rlog)) <- runStateT (runReaderT m' cfg)
                         (g'', init, Nothing,
                          ResultLog (mkFLIFO $ Just 10) (Just $ mkFLIFO Nothing))
-    return $ rlog -- $ peek $ resultLogBest rlog
+    return $ ((stdg,a),rlog) -- $ peek $ resultLogBest rlog
