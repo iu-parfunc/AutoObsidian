@@ -76,8 +76,9 @@ buildIt kernel_th = do
   return () 
 
   where
-    cmd = "TUNE_PARAMS=-DKERNEL_TH="++ show kernel_th  ++
-          " make -f ./gpu_graph/iu_bfsdp/Makefile" 
+    cmd = "(\cd ./gpu_graph/iu_bfsdp \\n"
+          "TUNE_PARAMS=-DKERNEL_TH="++ show kernel_th  ++
+          " make -f Makefile)" 
   
 
 runIt :: IO Double
