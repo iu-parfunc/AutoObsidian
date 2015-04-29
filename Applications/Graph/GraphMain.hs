@@ -31,7 +31,8 @@ import Data.Time.Clock
 import Control.Exception
 
 -- shell
-import System.Process 
+import System.Process
+import System.IO
 
 ---------------------------------------------------------------------------
 
@@ -84,7 +85,14 @@ buildIt kernel_th = do
 
 runIt :: IO Double
 runIt = do
-  (_,_,_,ph) <- createProcess $ shell cmd
+  (_,Just sout,Just serr,ph) <- createProcess $ shell cmd
+
+  -- should look at output for
+  -- "cuda event timer: 0.017409 s, or 17.409281 ms" 
+  output <- hGetContents sout
+  let ls = lines output
+  putStrLn $ show (length ls) ++ " LINES HARVESTERED" 
+  
   waitForProcess ph
   return 5.0
   where
