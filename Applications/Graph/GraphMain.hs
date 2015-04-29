@@ -72,7 +72,8 @@ prog = do
 
 buildIt :: Int -> IO () 
 buildIt kernel_th = do
-  (_,_,_,_) <- createProcess $ shell cmd
+  (_,_,_,ph) <- createProcess $ shell cmd
+  waitForProcess ph
   return () 
 
   where
@@ -83,7 +84,8 @@ buildIt kernel_th = do
 
 runIt :: IO Double
 runIt = do
-  (_,_,_,_) <- createProcess $ shell cmd 
+  (_,_,_,ph) <- createProcess $ shell cmd
+  waitForProcess ph
   return 5.0
   where
     -- with default params 
