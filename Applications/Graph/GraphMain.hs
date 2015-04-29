@@ -93,7 +93,9 @@ runIt = do
   -- "cuda event timer: 0.017409 s, or 17.409281 ms" 
   output <- hGetContents sout
   let ls = lines output
-  putStrLn $ show (length ls) ++ " LINES HARVESTERED" 
+  putStrLn $ show (length ls) ++ " LINES HARVESTERED"
+
+  putStrLn $ show (ls !! 3) 
   
   waitForProcess ph
   return 5.0
