@@ -68,6 +68,7 @@ library
                , array >=0.5
                , random
                , transformers >= 0.4.2.0 && < 0.5
+               , MonadRandom >= 0.3
 
   ghc-options: -Wall
 
