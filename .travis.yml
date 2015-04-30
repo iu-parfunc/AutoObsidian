@@ -44,8 +44,10 @@ script:
     cabal build;
     cabal test;
     cabal bench;
-# There's no Setup.hs... Perhaps there should be?
-#   cabal check;
     cabal sdist;
     cd -;
    done;
+
+# There's no Setup.hs... Perhaps there should be?
+# Feel free to add this before "cabal sdist" above:
+#   cabal check;
