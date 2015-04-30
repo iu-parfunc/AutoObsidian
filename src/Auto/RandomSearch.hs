@@ -24,7 +24,6 @@ import Control.Monad.State
 import Control.Monad.Reader
 import Control.Applicative
 
-
 import System.Random (randomR, StdGen, newStdGen)
 
 import Auto.SearchMonad
@@ -64,7 +63,8 @@ instance Ord result => SearchMonad result RandomSearch where
 
   runSearch cfg (RandomSearch m) = do
     stdGen <- newStdGen -- splits some "global" generator
-
+  
+  
     -- number of runs is now configurable
     let m' = forM_ [1..(numIters cfg)] $ \ _experiment_num ->
           -- experiment_num could be used for something (info printing)

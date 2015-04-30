@@ -42,7 +42,7 @@ instance Ord Result where
   compare (Result (_,d1)) (Result (_,d2)) = compare d1 d2
 
 instance Show Result where
-  show (Result (_,r)) = show r
+  show (Result (p,r)) = show p ++ " | " ++ show r
 
 -- parameters
 -- threads   = 256
@@ -57,10 +57,10 @@ bitCount  = 10
 -- testing 
 main = do
 
-  putStrLn "Bit climb search"
-  res <- execSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
-  putStrLn "Best param"
-  putStrLn $ show $ peek $ resultLogBest res
+  -- putStrLn "Bit climb search"
+  -- res <- execSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
+  -- putStrLn "Best param"
+  -- putStrLn $ show $ peek $ resultLogBest res
 
   putStrLn "Random search"
   res <- execSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
@@ -68,7 +68,7 @@ main = do
   putStrLn $ show $ peek $ resultLogBest res 
 
   putStrLn "Exhaustive search"
-  res <- execSearch (ES.Config [[32,64,128,256]]) (prog :: ExhaustiveSearch Result (Maybe Result))
+  res <- execSearch (ES.Config [[x*32| x <- [1..32]]]) (prog :: ExhaustiveSearch Result (Maybe Result))
   putStrLn "Best param"
   putStrLn $ show $ peek $ resultLogBest res
 
