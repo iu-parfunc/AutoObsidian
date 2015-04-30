@@ -4,6 +4,18 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
+{-|
+Module      : Auto.ExhaustiveSearch
+Description : ExhaustiveSearch instance for SearchMonad 
+Copyright   : (c) Bo Joel Svensson, 2015
+                  Michael Vollmer, 2015
+License     : GPL-3
+Maintainer  : 
+Stability   : experimental
+Portability : 
+
+Implementation of exhaustive search instance for the SearchMonad class. 
+-}
 module Auto.ExhaustiveSearch where
 
 import Control.Monad.State
@@ -16,6 +28,8 @@ import Auto.ResultLog
 
 
 -- config for exhaustive search
+-- | Configuration for exhaustive search contains a
+--   a list of parameter settings per parameter being tuned over. 
 data Config = Config { paramLists :: [[Int]] }
 
 

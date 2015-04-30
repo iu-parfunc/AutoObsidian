@@ -4,6 +4,19 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
+
+{-|
+Module      : Auto.RandomSearch
+Description : RandomSearch instance for SearchMonad 
+Copyright   : (c) Bo Joel Svensson, 2015
+                  Michael Vollmer, 2015
+License     : GPL-3
+Maintainer  : 
+Stability   : experimental
+Portability : 
+
+Implementation of random search instance for the SearchMonad class. 
+-}
 module Auto.RandomSearch where
 
 
@@ -17,7 +30,10 @@ import System.Random (randomR, StdGen, newStdGen)
 import Auto.SearchMonad
 import Auto.ResultLog
 
--- Config for Random search
+-- | Config for Random search
+--   Configuration consists of a list of ranges, one range per parameter
+--   being tuned over, and an integer specifying how many configurations
+--   should be tested. 
 data Config = Config { paramRanges :: [(Int,Int)]
                      , numIters :: Int }
 
