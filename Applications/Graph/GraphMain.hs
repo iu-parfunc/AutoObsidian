@@ -67,7 +67,7 @@ main = do
   where
     exhaustive = do
       putStrLn "Exhaustive search"
-      execSearch (ES.Config [[128, 256, 384, 512, 640, 768, 896, 1024, 1152]])
+      execSearch (ES.Config [[x*32 | x <- [1..64]]])
                  (prog :: ExhaustiveSearch Result (Maybe Result))
       
     random = do

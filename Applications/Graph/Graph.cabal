@@ -57,7 +57,7 @@ executable Graph
   other-extensions:    ScopedTypeVariables, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, FlexibleContexts
   
   -- Other library packages from which modules are imported.
-  build-depends: base >=4.7 && <4.8
+  build-depends: base >=4.7 
                , vector >=0.10 && <0.11
                , mtl >=2.2 && <2.3
                , time >=1.4 && <1.5
