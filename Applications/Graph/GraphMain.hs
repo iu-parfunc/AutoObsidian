@@ -102,7 +102,7 @@ runIt = do
   
   output <- hGetContents sout
   let ls = lines output
-  putStrLn $ show (length ls) ++ " LINES HARVESTERED"
+  -- putStrLn $ show (length ls) ++ " LINES HARVESTERED"
 
 
 
