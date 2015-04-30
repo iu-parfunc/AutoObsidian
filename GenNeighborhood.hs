@@ -28,18 +28,21 @@ prog2 = [([1], Fold g 0),
          ([3,2], Split 1),
          ([5], (Map f 2)),
          ([4], (Map f 3)),
-         ([6],  Concat 5 4)]
+         ([6],  Concat 4 5)]
 
 
 
 -- generating some neighbors
 
+nextNum :: [([Var], AExp)] -> Var
 nextNum = (+1) . maximum . map (maximum . nums)
   where nums (l, Fold _ v)   = v : l
         nums (l, Split v)    = v : l
         nums (l, Map _ v)    = v : l
         nums (l, Concat v n) = n : v : l
 
+-- walkCode :: (a -> Maybe [a]) -> [a] -> [a]
+walkCode :: (([Var], AExp) -> Maybe MidIR) -> MidIR -> MidIR
 walkCode _   []   = []
 walkCode gen code = code'
   where code' = case elem of
@@ -47,6 +50,8 @@ walkCode gen code = code'
           Nothing -> head code : walkCode gen (tail code)
         elem  = gen $ head code
 
+-- splits :: [([Var], AExp)] -> [([Var], AExp)]
+splits :: MidIR -> MidIR
 splits code = walkCode gen code
   where num = nextNum code
         gen ([n], Map f n1)  = Just [(makeSplit n1),
