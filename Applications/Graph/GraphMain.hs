@@ -66,7 +66,7 @@ main = do
   args <- getArgs
 
   res <- case args of
-    [] -> exhaustive
+    [] -> exhaustive2Param -- Just testing 
     ["RANDOM"] -> random
     ["BITCLIMB"] -> bitclimb
 
@@ -78,7 +78,12 @@ main = do
       putStrLn "Exhaustive search"
       execSearch (ES.Config [[x*32 | x <- [1..64]]])
                  (prog :: ExhaustiveSearch Result (Maybe Result))
-      
+
+    exhaustive2Param = do
+      putStrLn "Exhaustive search"
+      execSearch (ES.Config [[x| x <- [1..100]],[x*32 | x <- [1..64]]])
+                 (prog2Param :: ExhaustiveSearch Result (Maybe Result))
+ 
     random = do
       putStrLn "Random search"
       execSearch (RS.Config [(1,1024)] 1000)
@@ -106,6 +111,32 @@ prog = do
   liftIO $ putStrLn $ "Time for KERNEL_TH=" ++ (show kernel_th) ++ " was " ++ (show r)
   return $ Just $ Result ([kernel_th],r) 
 
+----------------------------------------------------------------------
+--
+----------------------------------------------------------------------
+prog2Param :: (MonadIO (m Result), SearchMonad Result m)
+     => m Result (Maybe Result)
+prog2Param = do
+  -- Get param settings 
+
+  small_th <- getParam 0
+  
+  kernel_th <- getParam 1
+  
+  
+  
+  liftIO $ putStrLn $ "Trying with kernel_th = " ++ show kernel_th
+
+  liftIO $ buildIt True small_th kernel_th 
+
+  r <- liftIO $ runIt
+  liftIO $ putStrLn $ "Time for KERNEL_TH=" ++ (show kernel_th) ++ " was " ++ (show r)
+  return $ Just $ Result ([kernel_th],r) 
+
+
+----------------------------------------------------------------------
+--
+----------------------------------------------------------------------
 buildIt :: Bool -> Int -> Int -> IO () 
 buildIt sequentialize_small small_th kernel_th = do
   putStrLn "Compiling.." 
