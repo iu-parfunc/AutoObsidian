@@ -58,21 +58,22 @@ bitCount  = 10
 main = do
 
   putStrLn "Bit climb search"
-  res <- runSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
+  res <- execSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
   putStrLn "Best param"
   putStrLn $ show $ peek $ resultLogBest res
 
   putStrLn "Random search"
-  res <- runSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
+  res <- execSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
   putStrLn "Best param"
   putStrLn $ show $ peek $ resultLogBest res 
 
   putStrLn "Exhaustive search"
-  res <- runSearch (ES.Config [[32,64,128,256]]) (prog :: ExhaustiveSearch Result (Maybe Result))
+  res <- execSearch (ES.Config [[32,64,128,256]]) (prog :: ExhaustiveSearch Result (Maybe Result))
   putStrLn "Best param"
   putStrLn $ show $ peek $ resultLogBest res
 
-prog :: SearchMonad Result m => m Result (Maybe Result)
+prog :: (MonadIO (m Result), SearchMonad Result m) 
+     => m Result (Maybe Result)
 prog = do
   
   -- This needs to be made part of the configuration of the search 

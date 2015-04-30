@@ -33,6 +33,7 @@ newtype RandomSearch result a =
 
 instance Ord result => SearchMonad result RandomSearch where
   type SearchConfig RandomSearch = Config
+  type SearchAux    RandomSearch = StdGen
   getParam i = do
     cfg <- ask
     --- Here ---
@@ -68,4 +69,4 @@ instance Ord result => SearchMonad result RandomSearch where
                         ( stdGen
                        , ResultLog (mkFLIFO $ Just 10)
                                    (Just $ mkFLIFO Nothing))
-    return $ snd s -- $ peek (resultLogBest (snd s))
+    return s --  $ snd s -- $ peek (resultLogBest (snd s))
