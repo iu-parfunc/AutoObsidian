@@ -142,8 +142,8 @@ prog2Param = do
 buildIt :: Bool -> Int -> Int -> IO () 
 buildIt sequentialize_small small_th kernel_th = do
   putStrLn "Compiling.." 
-  (_,_,_,ph) <- createProcess (shell cmd) { std_out = CreatePipe
-                                          , std_err = CreatePipe }
+  (_,_,_,ph) <- createProcess (shell cmd) -- { std_out = CreatePipe
+                                          -- , std_err = CreatePipe }
   waitForProcess ph
   return () 
 
