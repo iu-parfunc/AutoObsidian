@@ -4,7 +4,7 @@ Autotuning + Obsidian
 =====================
 
 Tests:
- * Travis: [![Build Status](https://travis-ci.org/iu-parfunc/AutoObsidian.svg?branch=master)](https://travis-ci.org/iu-parfunc/lvars)
+ * Travis: [![Build Status](https://travis-ci.org/iu-parfunc/AutoObsidian.svg?branch=master)](https://travis-ci.org/iu-parfunc/AutoObsidian)
  * Jenkins: [![Build Status](http://tester-lin.soic.indiana.edu:8080/buildStatus/icon?job=AutoObsidian)](http://tester-lin.soic.indiana.edu:8080/job/AutoObsidian/)
 
 
