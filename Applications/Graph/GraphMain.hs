@@ -75,11 +75,10 @@ prog = do
 
 buildIt :: Int -> IO () 
 buildIt kernel_th = do
-  putStr "Compiling.." 
+  putStrLn "Compiling.." 
   (_,_,_,ph) <- createProcess (shell cmd) { std_out = CreatePipe
                                           , std_err = CreatePipe }
   waitForProcess ph
-  putStrLn " Done."
   return () 
 
   
