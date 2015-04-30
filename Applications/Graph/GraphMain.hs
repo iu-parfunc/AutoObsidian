@@ -70,11 +70,13 @@ prog = do
   liftIO $ buildIt kernel_th 
 
   r <- liftIO $ runIt
+  liftIO $ putStrLn $ "Time for KERNEL_TH=" ++ (show kernel_th) ++ " was " ++ (show r)
   return $ Just $ Result ([kernel_th],r) 
 
 buildIt :: Int -> IO () 
 buildIt kernel_th = do
-  (_,_,_,ph) <- createProcess $ shell cmd
+  (_,_,_,ph) <- createProcess (shell cmd) { std_out = CreatePipe
+                                          , std_err = CreatePipe }
   waitForProcess ph
   return () 
 
@@ -93,6 +95,7 @@ runIt = do
   -- should look at output for
   -- "cuda event timer: 0.017409 s, or 17.409281 ms"
   let prefix = "cuda event timer:" 
+
   
   output <- hGetContents sout
   let ls = lines output
@@ -109,8 +112,7 @@ runIt = do
          in return d
     else error "ERROR" 
   
-  
-  return 5.0
+
   where
     -- with default params 
     cmd = "(cd ./gpu_graph/iu_bfsdp; ./main 20 16 0 0)" 
