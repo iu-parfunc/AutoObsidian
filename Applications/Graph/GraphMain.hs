@@ -6,6 +6,7 @@
 {-# LANGUAGE TypeFamilies #-} 
 {-# LANGUAGE FlexibleContexts #-}
 
+
 module Main where
 
 import Prelude hiding (replicate)
@@ -37,6 +38,14 @@ import System.IO
 import System.Environment
 
 ---------------------------------------------------------------------------
+{- Settings to tune
+   CONFIG_SEQUENTIALIZE_SMALL_VERTICES = 1
+   CONFIG_SMALL_VERTEX_THRESHOLD = 1 - 1000 ?
+
+   KERNEL_TH = 1 .. 10000 ? 
+
+-} 
+
 
 data Result = Result ([Int],Double)
 
@@ -57,9 +66,9 @@ main = do
   args <- getArgs
 
   res <- case args of
-    [] -> exhaustive
     ["RANDOM"] -> random
     ["BITCLIMB"] -> bitclimb
+    _ -> exhaustive2Param -- Just testing 
 
   putStrLn "Best param"
   putStrLn $ show $ peek $ resultLogBest res
@@ -69,7 +78,12 @@ main = do
       putStrLn "Exhaustive search"
       execSearch (ES.Config [[x*32 | x <- [1..64]]])
                  (prog :: ExhaustiveSearch Result (Maybe Result))
-      
+
+    exhaustive2Param = do
+      putStrLn "Exhaustive search"
+      execSearch (ES.Config [[x*32 | x <- [1..64]],[x*32| x <- [1..10]]])
+                 (prog2Param :: ExhaustiveSearch Result (Maybe Result))
+ 
     random = do
       putStrLn "Random search"
       execSearch (RS.Config [(1,1024)] 1000)
@@ -91,15 +105,46 @@ prog = do
 
   liftIO $ putStrLn $ "Trying with kernel_th = " ++ show kernel_th
 
-  liftIO $ buildIt kernel_th 
+  liftIO $ buildIt False 0 kernel_th 
 
   r <- liftIO $ runIt
   liftIO $ putStrLn $ "Time for KERNEL_TH=" ++ (show kernel_th) ++ " was " ++ (show r)
   return $ Just $ Result ([kernel_th],r) 
 
-buildIt :: Int -> IO () 
-buildIt kernel_th = do
-  putStrLn "Compiling.." 
+----------------------------------------------------------------------
+--
+----------------------------------------------------------------------
+prog2Param :: (MonadIO (m Result), SearchMonad Result m)
+     => m Result (Maybe Result)
+prog2Param = do
+  -- Get param settings 
+
+  small_th <- getParam 1
+
+  kernel_th <- getParam 0
+  
+  
+  liftIO $ putStrLn $ "Trying with kernel_th = " ++ show kernel_th ++ "\n" ++ 
+                      "and small_th = " ++ show small_th 
+
+  liftIO $ buildIt True small_th kernel_th 
+
+  r <- liftIO $ runIt
+  liftIO $ putStrLn $ "Time for:\nKERNEL_TH=" ++
+                      show kernel_th ++ "\n" ++
+                      "CONFIG_SMALL_VERTEX_THRESHOLD=" ++
+                      show small_th  ++ "\n was " ++ (show r)
+  return $ Just $ Result ([kernel_th],r) 
+
+
+----------------------------------------------------------------------
+--
+----------------------------------------------------------------------
+buildIt :: Bool -> Int -> Int -> IO () 
+buildIt sequentialize_small small_th kernel_th = do
+  putStrLn "Compiling.."
+  -- putStrLn cmd 
+  
   (_,_,_,ph) <- createProcess (shell cmd) { std_out = CreatePipe
                                           , std_err = CreatePipe }
   waitForProcess ph
@@ -107,8 +152,15 @@ buildIt kernel_th = do
 
   
   where
+    small = if sequentialize_small
+            then "-DCONFIG_SEQUENTIALIZE_SMALL_VERTICES=1"
+            else ""
+    small_th_str = if sequentialize_small
+                   then "-DCONFIG_SMALL_VERTEX_THRESHOLD=" ++ show small_th
+                   else "" 
     cmd = "(cd ./gpu_graph/iu_bfsdp; " ++
-          "TUNE_PARAMS=-DKERNEL_TH="++ show kernel_th  ++
+          "TUNE_PARAMS='-DKERNEL_TH="++ show kernel_th  ++
+          " " ++ small ++ " " ++ small_th_str ++ "'" ++
           " make -f Makefile)" 
   
 

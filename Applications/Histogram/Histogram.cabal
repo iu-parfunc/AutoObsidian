@@ -82,10 +82,9 @@ executable Histogram
   build-depends: base >=4.7
                , vector >=0.10 && <0.11
                , mtl >=2.2 && <2.3
-               , Obsidian >= 0.4.0.0
-               , AutoObsidian >= 0.1.0.0
-               , time >= 1.4.2
-
+               , Obsidian >= 0.4.0.0 
+               , AutoObsidian >= 0.1.0.0 
+               , time 
   -- Directories containing source files.
   -- hs-source-dirs:
 

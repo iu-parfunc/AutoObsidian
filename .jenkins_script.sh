@@ -6,6 +6,9 @@ if [ "$CABAL" == "" ]; then
     CABAL=cabal
 fi
 
+
+(cd Obsidian; git checkout master-dev) 
+
 $CABAL sandbox init
 
 OPTS="-j --ghc-option=-j3"

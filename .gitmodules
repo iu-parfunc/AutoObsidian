@@ -1,3 +1,6 @@
 [submodule "Obsidian"]
 	path = Obsidian
 	url = git@github.com:svenssonjoel/Obsidian
+[submodule "gpu_graph"]
+	path = gpu_graph
+	url = git@gitlab.crest.iu.edu:gpu-graphs/gpu_graph.git
