@@ -66,9 +66,9 @@ main = do
   args <- getArgs
 
   res <- case args of
-    [] -> exhaustive2Param -- Just testing 
     ["RANDOM"] -> random
     ["BITCLIMB"] -> bitclimb
+    _ -> exhaustive2Param -- Just testing 
 
   putStrLn "Best param"
   putStrLn $ show $ peek $ resultLogBest res
