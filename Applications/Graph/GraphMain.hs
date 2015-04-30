@@ -154,12 +154,12 @@ buildIt sequentialize_small small_th kernel_th = do
     small = if sequentialize_small
             then "-DCONFIG_SEQUENTIALIZE_SMALL_VERTICES=1"
             else ""
-    small_th = if sequentialize_small
-               then "-DCONFIG_SMALL_VERTEX_THRESHOLD=" ++ show small_th
-               else "" 
+    small_th_str = if sequentialize_small
+                   then "-DCONFIG_SMALL_VERTEX_THRESHOLD=" ++ show small_th
+                   else "" 
     cmd = "(cd ./gpu_graph/iu_bfsdp; " ++
           "TUNE_PARAMS='-DKERNEL_TH="++ show kernel_th  ++
-          " " ++ small ++ " " ++ small_th ++ "'" ++
+          " " ++ small ++ " " ++ small_th_str ++ "'" ++
           " make -f Makefile)" 
   
 
