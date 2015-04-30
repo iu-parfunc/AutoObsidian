@@ -31,9 +31,10 @@ import Data.Time.Clock
 -- exception
 import Control.Exception
 
--- shell
+-- System
 import System.Process
 import System.IO
+import System.Environment
 
 ---------------------------------------------------------------------------
 
@@ -52,12 +53,34 @@ instance Show Result where
 
 main :: IO ()
 main = do
-  
-  putStrLn "Exhaustive search"
-  res <- execSearch (ES.Config [[128, 256, 384, 512, 640, 768, 896, 1024, 1152]]) (prog :: ExhaustiveSearch Result (Maybe Result))
+
+  args <- getArgs
+
+  res <- case args of
+    [] -> exhaustive
+    ["RANDOM"] -> random
+    ["BITCLIMB"] -> bitclimb
+
   putStrLn "Best param"
   putStrLn $ show $ peek $ resultLogBest res
+    
+  where
+    exhaustive = do
+      putStrLn "Exhaustive search"
+      execSearch (ES.Config [[128, 256, 384, 512, 640, 768, 896, 1024, 1152]])
+                 (prog :: ExhaustiveSearch Result (Maybe Result))
+      
+    random = do
+      putStrLn "Random search"
+      execSearch (RS.Config [(1,1024)] 1000)
+                 (prog :: RandomSearch Result (Maybe Result))
+      
+    bitclimb = do 
+      putStrLn "Bit climb search"
+      execSearch (BS.Config 10 1 100 True)
+                 (prog :: BitClimbSearch Result (Maybe Result)) 
 
+             
   
                      
 prog :: SearchMonad Result m => m Result (Maybe Result)
