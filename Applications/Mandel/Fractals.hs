@@ -7,7 +7,7 @@
 
 module Fractals where
 
-import Obsidian
+import Obsidian as O
 
 import Data.Word
 
@@ -26,7 +26,7 @@ xmin = -2.0
 
 ymax, ymin :: EFloat
 ymax =  1.2
-ymin = -1.2 
+ymin = -1.2
 
 -- plate1
 -- xmax =  -0.690906 :: EFloat
@@ -40,7 +40,7 @@ ymin = -1.2
 -- ymax =  0.140974 :: EFloat
 -- ymin =  0.037822 :: EFloat
 
--- Plate3 
+-- Plate3
 -- xmax =  -0.745388 :: EFloat
 -- xmin =  -0.745464 :: EFloat
 -- ymax =  0.113030 :: EFloat
@@ -48,7 +48,7 @@ ymin = -1.2
 
 
 -- For generating a 512x512 image
-deltaP, deltaQ :: EWord32 -> EFloat 
+deltaP, deltaQ :: EWord32 -> EFloat
 deltaP s = (xmax - xmin) / (w32ToF s) -- 512.0
 deltaQ s = (ymax - ymin) / (w32ToF s) -- 512.0
 
@@ -59,21 +59,21 @@ f :: Num t => EWord32
      -> (EFloat,EFloat, t)
 f s bid tid (x,y,iter) = (xsq - ysq + (xmin + (w32ToF tid) * deltaP s),
                         2*x*y + (ymax - (w32ToF bid) * deltaQ s),
-                        iter+1) 
+                        iter+1)
   where
     xsq = x*x
     ysq = y*y
 
-cond (x,y,iter) = ((xsq + ysq) <* 4) &&* iter <* 512  
+cond (x,y,iter) = ((xsq + ysq) O.<* 4) &&* iter O.<* 512
   where
     xsq = x*x
-    ysq = y*y 
+    ysq = y*y
 
 
-iters :: EWord32 -> EWord32 -> EWord32 ->  Program Thread EW8  
+iters :: EWord32 -> EWord32 -> EWord32 ->  Program Thread EW8
 iters s bid tid =
   do (_,_,c) <- seqUntil (f s bid tid) cond  (0,0,1)
-     return (color c) 
+     return (color c)
   where
     color c= ((w32ToW8 c) `mod` 16) * 16
 
@@ -82,13 +82,12 @@ genRect :: Data  b
            -> Word32
            -> (EWord32 -> EWord32 -> SPush Thread b)
            -> DPush Grid b
-genRect bs ts p = asGrid 
-                $ mkPull bs 
+genRect bs ts p = asGrid
+                $ mkPull bs
                 $ \bid -> asBlock $ mkPull ts (p bid)
 
 
--- Generate square Mandelbrot images 
-mandel x = genRect (fromIntegral x) x body 
+-- Generate square Mandelbrot images
+mandel x = genRect (fromIntegral x) x body
   where
-    body i j = singletonPush (iters (fromIntegral x) i j) 
-  
+    body i j = singletonPush (iters (fromIntegral x) i j)
