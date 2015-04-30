@@ -75,11 +75,14 @@ prog = do
 
 buildIt :: Int -> IO () 
 buildIt kernel_th = do
+  putStr "Compiling.." 
   (_,_,_,ph) <- createProcess (shell cmd) { std_out = CreatePipe
                                           , std_err = CreatePipe }
   waitForProcess ph
+  putStrLn " Done."
   return () 
 
+  
   where
     cmd = "(cd ./gpu_graph/iu_bfsdp; " ++
           "TUNE_PARAMS=-DKERNEL_TH="++ show kernel_th  ++
@@ -106,7 +109,7 @@ runIt = do
   
   waitForProcess ph
 
-  putStrLn $ show (ls !! 4)
+  -- putStrLn $ show (ls !! 4)
   if ( isPrefixOf prefix (ls !! 4) )
     then let [(d,_)] = reads (drop (length prefix) (ls !! 4)) :: [(Double,String)]
          in return d
