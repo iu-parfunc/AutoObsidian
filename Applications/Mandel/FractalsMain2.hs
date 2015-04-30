@@ -72,7 +72,8 @@ main = do
   putStrLn "Best param"
   putStrLn $ show $ peek $ resultLogBest res
 
-prog :: SearchMonad Result m => m Result (Maybe Result)
+prog :: (MonadIO (m Result), SearchMonad Result m) 
+     => m Result (Maybe Result)
 prog = do
   
   -- This needs to be made part of the configuration of the search 

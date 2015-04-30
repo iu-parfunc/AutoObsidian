@@ -34,8 +34,7 @@ import Auto.ResultLog
 --       should return a full resultLog!
 
 class ( Ord result
-      , Monad (m result)
-      , MonadIO (m result) ) => SearchMonad result m where
+      , Monad (m result) ) => SearchMonad result m where
   
   type SearchConfig m
   type SearchAux    m 

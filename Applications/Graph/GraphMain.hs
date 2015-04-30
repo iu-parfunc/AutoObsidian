@@ -83,7 +83,8 @@ main = do
              
   
                      
-prog :: SearchMonad Result m => m Result (Maybe Result)
+prog :: (MonadIO (m Result), SearchMonad Result m)
+     => m Result (Maybe Result)
 prog = do
   -- Get param settings 
   kernel_th <- getParam 0
