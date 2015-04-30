@@ -1,4 +1,6 @@
 
+module GenNeighborhood where
+
 -- IR datatype from last meeting
 
 type MidIR = [([Var], AExp)]
@@ -55,7 +57,7 @@ splits :: MidIR -> MidIR
 splits code = walkCode gen code
   where num = nextNum code
         gen ([n], Map f n1)  = Just [(makeSplit n1),
-                                   ([num+2], Map f num), 
+                                   ([num+2], Map f num),
                                    ([num+3], Map f (num+1)),
                                    ([n], Concat (num+2) (num+3))]
         gen ([n], Fold f n1) = Just [(makeSplit n1),
@@ -64,6 +66,3 @@ splits code = walkCode gen code
                                    ([n], Concat (num+2) (num+3))]
         gen _              = Nothing
         makeSplit n        = ([num, num+1], Split n)
-        
-        
-

@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedLists, ScopedTypeVariables, GADTs #-}
 
+module AutoTuneIFace where
+
 ---------------------------------------------------------------------------------------
 -- EXISTING LIBRARIES (on Hackage):
 
@@ -23,13 +25,13 @@ class Monad m => TreeTuner m where
   continuousChoice :: Fractional a => (a,a) -> m a
 
   -- For convenience, we provide a default implementation of Enum choices:
-  enumChoice :: forall a . (Bounded a, Enum a) => m a 
-  enumChoice = do 
-    let mn, mx :: a 
+  enumChoice :: forall a . (Bounded a, Enum a) => m a
+  enumChoice = do
+    let mn, mx :: a
         (mn,mx) = (minBound,maxBound)
         rng :: (Int,Int)
         rng = (fromEnum mn, fromEnum mx)
-    n <- discreteChoice rng 
+    n <- discreteChoice rng
     return $! toEnum n
 
 class TreeTuner m => NestedTuner m where
@@ -44,12 +46,12 @@ class TreeTuner m => NestedTuner m where
 
 -- Technique transformers ? Techniques as a monoid?
 
-{- 
+{-
   eval :: Params -> Double
   nbrs :: Params -> Vector Params
   apply :: Vector Params -> ParamSpace -> SearchTechnique
 
-  -- Probabilistic: 
+  -- Probabilistic:
   nbrs :: Params -> IO Params
 
 -}
@@ -62,15 +64,15 @@ class TreeTuner m => NestedTuner m where
 ---------------------------------------------------------------------------------------
 -- TODO: Compiler construction interface (passes):
 
--- 
--- composing compilers/passes results 
+--
+-- composing compilers/passes results
 
 -- nestedBlockChoice in leaves
 --   * code generation functions could compose and return a function of many parameters
 --   * some potential sharing between block searches on common parameters
 
 
--- function from input to params, cont 
+-- function from input to params, cont
 
 type Tunable0 inp out = (ParamSpace, inp -> out)
 
@@ -85,19 +87,19 @@ data InProgress out = Yield (ParamSpace, Params -> out)
 
 pass1 :: Tunable1 X Y
 pass1 = undefined
- 
+
 pass2 :: Tunable1 Y Z
 pass2 = undefined
 
--- pass2 . pass1 
+-- pass2 . pass1
 cont :: Params -> Y
 spc :: ParamSpace
 (spc,cont) = pass1 X
 -- Uh oh, can't call pass2 until we make some arbitrary choice for spc
 
 -- Reversible Jump -- use a Map for each Paramspace
---  when we change the Params for pass1, we pull over old 
---  Params for pass2 
+--  when we change the Params for pass1, we pull over old
+--  Params for pass2
 
 
 -- pass1B :: ReTunable1 X Y
@@ -115,22 +117,22 @@ data Params      = Params [Int]
 data ParamSpace  = ParamSpace [(Int,Int)]
 data Future a = Future a
 
--- 
+--
 
 
 data Blah = Foo | Bar | Baz deriving (Read,Show,Eq,Enum,Bounded)
 
 test0 :: TreeTuner m => m Int
-test0 = do 
+test0 = do
   -- This forces backtracking strategy only:
   vec1 <- forM [1..100] $ \_ -> discreteChoice (0,10)
   return (vec1!0)
 
 test1 :: TreeTuner m => m Blah
-test1 = enumChoice 
+test1 = enumChoice
 
 test2 :: NestedTuner m => m Int
-test2 = do 
+test2 = do
   -- This one can enable a nested search, e.g. GA, inside the outer
   -- backtracking search:
   vec2 <- nestedBlockChoice (V.replicate 100 (0,10))
@@ -140,15 +142,15 @@ test2 = do
 -- PROBLEMS with the above strawman:
 
 -- It puts an unnecessary ORDERING on choices (backtracking monad)
---  Even with things like fissioning 
+--  Even with things like fissioning
 
 
--- data MidIR = Map Exp MidIR | Fold Exp MidIR 
+-- data MidIR = Map Exp MidIR | Fold Exp MidIR
 --            | Split MidIR | Concat MidIR MidIR
 --            | Let ([Var],MidIR) MidIR | V Var
 
 type MidIR = [([Var],AExp)]
-data AExp  = V Var 
+data AExp  = V Var
            | Map Exp Var | Fold Exp Var
            | Split Var | Concat Var Var
 
@@ -161,8 +163,8 @@ g :: Exp
 g = undefined
 
 -- Example Recipe->Recipe transition:
-{- 
-arr = undefined 
+{-
+arr = undefined
 prog1 = Map f (Fold g arr)
 prog2 = Let (["a1","a2"], Split (Fold g arr)) $
         Concat (Map f (V "a1"))
@@ -172,7 +174,7 @@ prog1 = [(["a0"], Fold g "const"),
          (["a1"], Map f "a0")]
 
 prog2 :: MidIR
-prog2 = [(["a0"], Fold g "const"), 
+prog2 = [(["a0"], Fold g "const"),
          (["a0a","a0b"], Split "a0"),
          (["a1a"], (Map f "a0a")),
          (["a1b"], (Map f "a0b")),
@@ -209,15 +211,15 @@ data Recipe a b where
   FoldG   :: Recipe X Y
 
 data X = X
-data Y = Y 
+data Y = Y
 data Z = Z
- 
+
 --            | Target Who
--- data Who = MapF | FoldG 
+-- data Who = MapF | FoldG
 -- data Who = String -- a1
 
 -- Rewrite rules:
---    map f a -> 
+--    map f a ->
 
 -- type Recipe = MidIR -- Infinite space of rewrite transitions...
 -- type Recipe = (Bool,Bool) -- fixed cartesian space...
@@ -227,17 +229,17 @@ data Z = Z
 -- data Decision = Fuse (String,
 
 
-score :: Recipe a b -> IO Double 
+score :: Recipe a b -> IO Double
 score = undefined
 
 transition :: Recipe a b -> Distribution (Recipe a b)
-transition = undefined 
+transition = undefined
 
 -- data Recipe = ... | ... ??
 
-data Distribution a 
+data Distribution a
 
--- transition :: Recipe -> IO Recipe 
+-- transition :: Recipe -> IO Recipe
 
 
 ---------------------------------------------------------------------------------------
@@ -245,8 +247,3 @@ data Distribution a
 
 -- type Recipe = (OptLevel OneToThree, GCCFlags, GCCNumericParams)
 -- data
-
-
-
-
-
