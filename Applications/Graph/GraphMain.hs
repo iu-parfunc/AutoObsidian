@@ -15,6 +15,7 @@ import Obsidian.Run.CUDA.Exec
 import Control.Monad.State
 
 import Data.Word
+import Data.List 
 
 -- Autotuning framework 
 import Auto.Score
@@ -90,17 +91,25 @@ runIt = do
                                  ,std_err = CreatePipe }
 
   -- should look at output for
-  -- "cuda event timer: 0.017409 s, or 17.409281 ms" 
+  -- "cuda event timer: 0.017409 s, or 17.409281 ms"
+  let prefix = "cuda event timer:" 
+  
   output <- hGetContents sout
   let ls = lines output
   putStrLn $ show (length ls) ++ " LINES HARVESTERED"
 
-  putStrLn $ show (ls !! 3)
-  putStrLn $ show (ls !! 4)
-  putStrLn $ show (ls !! 5)
-  
+
+
   
   waitForProcess ph
+
+  putStrLn $ show (ls !! 4)
+  if ( isPrefixOf prefix (ls !! 4) )
+    then let [(d,_)] = reads (drop (length prefix) (ls !! 4)) :: [(Double,String)]
+         in return d
+    else error "ERROR" 
+  
+  
   return 5.0
   where
     -- with default params 
