@@ -62,7 +62,7 @@ executable Mandel
                   , FlexibleInstances
   
   -- Other library packages from which modules are imported.
-  build-depends: base >=4.7 && <4.8
+  build-depends: base >=4.7 
                , vector >=0.10 && <0.11
                , mtl >=2.1 && <2.3
                , bytestring >=0.10 && <0.11
@@ -98,7 +98,7 @@ executable Mandel2
                   , FlexibleInstances
   
   -- Other library packages from which modules are imported.
-  build-depends: base >=4.7 && <4.8
+  build-depends: base >=4.7 
                , vector >=0.10 && <0.11
                , mtl >=2.1 && <2.3
                , bytestring >=0.10 && <0.11
