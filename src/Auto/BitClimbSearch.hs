@@ -6,6 +6,18 @@
 
 -- Bit climbing is hill climbing on bit strings.
 
+{-|
+Module      : Auto.BitClimbSearch
+Description : BitClimbSearch instance for SearchMonad 
+Copyright   : (c) Bo Joel Svensson, 2015
+                  Michael Vollmer, 2015
+License     : GPL-3
+Maintainer  : 
+Stability   : experimental
+Portability : 
+
+Implementation of bit climb search instance for the SearchMonad class. 
+-}
 module Auto.BitClimbSearch where
 
 import Control.Monad.State
