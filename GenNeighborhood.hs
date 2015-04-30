@@ -1,9 +1,14 @@
 
+-- | Follow-up from meetings with Chung-cheih shan and Co., where we
+-- discussed how to do a search over splitting strategy.
+
 module GenNeighborhood where
 
--- IR datatype from last meeting
+-- IR datatype from last meeting.
 
+-- | A program is a flat list of variable bindings.
 type MidIR = [([Var], AExp)]
+
 data AExp  = V Var
            | Map Exp Var | Fold Exp Var
            | Split Var   | Concat Var Var

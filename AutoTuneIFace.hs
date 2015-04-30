@@ -35,7 +35,8 @@ class Monad m => TreeTuner m where
     return $! toEnum n
 
 class TreeTuner m => NestedTuner m where
-  -- A nested search for a block of choices
+  -- A search for a block of choices.  This has a hyper-rectangular structure
+  -- which may make it easier to deal with.
   nestedBlockChoice :: Num a => Vector (a,a) -> m (Vector a)
 
 --  nestedFutureBlockChoice :: Num a => Vector (a,a) -> m (Future (Vector a))
