@@ -75,8 +75,9 @@ install:
     - c2hs --version
     - nvcc --version
     - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
-    - export DEPS="./Obsidian ./Applications/Mandel ./Applications/Histogram"
-    - cabal install --only-dependencies --enable-tests --enable-benchmarks . ${DEPS}
+    - export DEPS="./Obsidian"
+    - export APPS="./Applications/Mandel ./Applications/Histogram"
+    - cabal install --only-dependencies --enable-tests --enable-benchmarks . ${DEPS} ${APPS}
     - cabal install ${DEPS}
 
 # Here starts the actual work to be performed for the package under test; any
@@ -99,6 +100,17 @@ script:
             echo "'$SRC_TGZ': not found"
             exit 1
         fi
+
+    # Test each of the applications
+    - |
+        for APP in ${APPS}; do
+            cd ${APP}
+            cabal configure --enable-tests --enable-benchmarks -v2 -flib-Werror
+            cabal build
+            cabal test --show-details=always
+            cabal bench
+            cd -
+        done
 
 after_failure:
     - dmesg
