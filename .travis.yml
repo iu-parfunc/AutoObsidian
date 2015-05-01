@@ -75,35 +75,30 @@ install:
     - c2hs --version
     - nvcc --version
     - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
-    - export PKGS="src/AutoObsidian.cabal ./Obsidian ./Applications/Mandel ./Applications/Histogram"
-    - cabal install --only-dependencies --enable-tests --enable-benchmarks ${PKGS}
+    - export DEPS="./Obsidian ./Applications/Mandel ./Applications/Histogram"
+    - cabal install --only-dependencies --enable-tests --enable-benchmarks . ${DEPS}
+    - cabal install ${DEPS}
 
 # Here starts the actual work to be performed for the package under test; any
 # command which exits with a non-zero exit code causes the build to fail.
 script:
+    # Check the build
+    - cabal configure -v2 -flib-Werror ${MODE}
+    - cabal build
+    - cabal haddock
+    - cabal test --show-details=always
+
+    # Check the source distribution can be generated, built, and installed
+    - cabal sdist
     - |
-        for PKG in ${PKGS}; do
-            # Check the build
-            pushd ${PKG}
-            cabal configure --enable-tests --enable-benchmarks -v2 -flib-Werror
-            cabal build
-            cabal haddock
-            cabal test --show-details=always
-            cabal bench
-
-            # Check the source distribution can be generated, built, and installed
-            cabal sdist
-            export SRC_TGZ=$(cabal info . | awk '{print $2 ".tar.gz";exit}')
-            cd dist
-            if [ -f "$SRC_TGZ" ]; then
-                cabal install --force-reinstalls ${SRC_TGZ}
-            else
-                echo "'$SRC_TGZ': not found"
-                exit 1
-            fi
-
-            popd
-        done
+        export SRC_TGZ=$(cabal info . | awk '{print $2 ".tar.gz";exit}')
+        cd dist
+        if [ -f "$SRC_TGZ" ]; then
+            cabal install --force-reinstalls ${MODE} ${SRC_TGZ}
+        else
+            echo "'$SRC_TGZ': not found"
+            exit 1
+        fi
 
 after_failure:
     - dmesg
