@@ -24,9 +24,12 @@ git:
 
 before_install:
     # Use sed to replace the SSH URL with the public URL, then initialize submodules
+    # Only the Obsidian submodule, because
+    #   (a) that is the only one used; and
+    #   (b) gpu_graphs is on a private server (gitlab.crest)
     - echo "Setting up submodules"
     - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
-    - git submodule update --init
+    - git submodule update --init Obsidian
 
     # If travis doesn't have the version of GHC that we want, get it from hvr's PPA
     - echo "Setting up GHC"
