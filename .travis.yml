@@ -6,10 +6,11 @@ env:
 
   matrix:
     - CUDA=6.5-14 GHC=7.8.4
-    - CUDA=6.5-14 GHC=7.10.1
+    - CUDA=6.5-14 GHC=7.10.1 CABAL=1.22
     - CUDA=7.0-28 GHC=7.8.4
-    - CUDA=7.0-28 GHC=7.10.1
-    - CUDA=7.0-28 GHC=head
+    - CUDA=7.0-28 GHC=7.10.1 CABAL=1.22
+    - CUDA=7.0-28 GHC=head CABAL=head
+
 #    - CUDA=6.0-37
 
 matrix:
@@ -41,11 +42,11 @@ before_install:
             travis_retry sudo apt-get install -y ghc-${GHC}
             export PATH=/opt/ghc/${GHC}/bin:${PATH}
         fi
-    # - |
-    #     if [ ${GHC} = "head" ]; then
-    #         travis_retry sudo apt-get install -y cabal-install-head
-    #         export PATH=/opt/cabal/head/bin:${PATH}
-    #     fi
+    - |
+        if [ ${CABAL} ]; then
+            travis_retry sudo apt-get install -y cabal-install-${CABAL}
+            export PATH=/opt/cabal/${CABAL}/bin:${PATH}
+        fi
 
     # If we want to build c2hs from source, ghc-7.8 and later will require newer
     # versions of happy and alex
