@@ -83,4 +83,5 @@ instance Ord result => SearchMonad result ExhaustiveSearch where
                         ( []
                         , ResultLog (mkFLIFO $ Just 10)
                                     (Just $ mkFLIFO Nothing))
-    return s -- $ snd s -- $ peek (resultLogBest (snd s))
+    return s -- snd s -- $ peek (resultLogBest (snd s))
+
