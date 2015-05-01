@@ -6,8 +6,11 @@ if [ "$CABAL" == "" ]; then
     CABAL=cabal
 fi
 
-
-(cd Obsidian; git checkout master-dev) 
+# Manually update just ONE submodule.  Not testing the gpu_graph one currently:
+git submodule update --init Obsidian
+# This is a no-no, it means different things at different times and is
+# thus not reproducable:
+# (cd Obsidian; git checkout master-dev)
 
 $CABAL sandbox init
 
