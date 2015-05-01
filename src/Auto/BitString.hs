@@ -16,6 +16,8 @@ module Auto.BitString
        , nthParam
        , nthIndividual
        , nthIndividualParam
+       , crossBitString
+       , mutateBitString
        )
        where
 
