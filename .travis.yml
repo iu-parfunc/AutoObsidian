@@ -77,7 +77,7 @@ install:
     - c2hs --version
     - nvcc --version
     - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
-    - export PKGS="./Obsidian/ ./src/ ./Applications/Mandel ./Applications/Histogram"
+    - export PKGS="src/AutoObsidian.cabal ./Obsidian ./Applications/Mandel ./Applications/Histogram"
     - cabal install --only-dependencies --enable-tests --enable-benchmarks ${PKGS}
 
 # Here starts the actual work to be performed for the package under test; any
