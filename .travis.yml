@@ -95,7 +95,7 @@ script:
         export SRC_TGZ=$(cabal info . | awk '{print $2 ".tar.gz";exit}')
         cd dist
         if [ -f "$SRC_TGZ" ]; then
-            cabal install --force-reinstalls ${MODE} ${SRC_TGZ}
+            cabal install --force-reinstalls ${MODE} ${SRC_TGZ} || exit 1
         else
             echo "'$SRC_TGZ': not found"
             exit 1
@@ -106,10 +106,10 @@ script:
     - |
         for APP in ${APPS}; do
             cd ${APP}
-            cabal configure --enable-tests --enable-benchmarks -v2 -flib-Werror
-            cabal build
-            cabal test --show-details=always
-            cabal bench
+            cabal configure --enable-tests --enable-benchmarks -v2 -flib-Werror || exit 1
+            cabal build || exit 1
+            cabal test --show-details=always || exit 1
+            cabal bench || exit 1
             cd -
         done
 
