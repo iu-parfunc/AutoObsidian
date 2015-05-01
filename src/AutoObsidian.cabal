@@ -54,6 +54,7 @@ library
                  , Auto.ExhaustiveSearch
                  , Auto.BitClimbSearch
                  , Auto.ResultLog
+                 , Auto.BitString
 
   -- Modules included in this library but not exported.
   -- other-modules:
