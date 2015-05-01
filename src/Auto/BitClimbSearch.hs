@@ -17,7 +17,22 @@ Stability   : experimental
 Portability :
 
 Implementation of bit climb search instance for the SearchMonad class.
+
+"Bit climbing" is just  hill climbing over bit strings. In this
+implementation, the choice of a bit string as the data structure
+used in the search state is hard-coded.
+
+The basic strategy is to start with a state with a bit string, and
+take "steps" by testing random permutations of the bit string
+(flipping one bit at random), and "stepping" to a new state if it
+is evaluated to be better than the current step. So, we always step
+to better states, which places an emphasis on exploitation rather than
+exploration, but the procedure will potentially test many bad
+configurations during the random permutations (though these bad
+configurations are not stepped to).
 -}
+
+
 module Auto.BitClimbSearch where
 
 import Auto.BitString

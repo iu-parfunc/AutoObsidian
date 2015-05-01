@@ -18,17 +18,21 @@ Portability :
 
 This module contains the SearchMonad class and directly
 related functions.
+
+Using the SearchMonad to tune something requires making a
+monadic action that will act as a fitness function. Inside
+the action, you can query for parameters.
 -}
 
 {-
 
 TODOs for the SearchMonad abstraction:
 
- * Further abstractions
+ * Refactor handling of random numbers
 
- * Parameter types
+ * Refactor as monad transformer
 
- * result types (should just require an Ord instance)
+ * Further abstract parameters and data representation
 
 -}
 
