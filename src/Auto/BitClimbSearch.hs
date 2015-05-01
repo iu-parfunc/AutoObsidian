@@ -1,48 +1,47 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 -- Bit climbing is hill climbing on bit strings.
 
 {-|
 Module      : Auto.BitClimbSearch
-Description : BitClimbSearch instance for SearchMonad 
+Description : BitClimbSearch instance for SearchMonad
 Copyright   : (c) Bo Joel Svensson, 2015
                   Michael Vollmer, 2015
 License     : GPL-3
-Maintainer  : 
+Maintainer  :
 Stability   : experimental
-Portability : 
+Portability :
 
-Implementation of bit climb search instance for the SearchMonad class. 
+Implementation of bit climb search instance for the SearchMonad class.
 -}
 module Auto.BitClimbSearch where
 
-import Control.Monad.State
-import Control.Monad.Reader
-import Control.Applicative
-import System.Random
-import Data.Array
-import Auto.SearchMonad
+import Auto.BitString
 import Auto.ResultLog
-import Auto.Score
-import Prelude hiding (init)
+import Auto.SearchMonad
+import Control.Applicative
+import Control.Monad.Random
+import Control.Monad.Reader
+import Control.Monad.State
+import Prelude              hiding (init)
 
--- We're using bitstrings to store numbers internally, so we need to
--- parameterize the search with the number of bits to use for our
--- parameters. This assumes each parameter has the same number of bits.
+-- | We're using bitstrings to store numbers internally, so we need to
+--   parameterize the search with the number of bits to use for our
+--   parameters. This assumes each parameter has the same number of bits.
 data Config = Config { numBits   :: Int
                      , numParams :: Int
                      , numIters  :: Int
                      , verbose   :: Bool
                      }
 
--- The search needs to keep track of the current bitstring
--- and maybe the evaluated result
+-- | The search needs to keep track of the current bitstring
+--   and maybe the evaluated result
 type SearchState result = ( StdGen
-                          , Array Int BitString
+                          , MultiBitString
                           , Maybe result
                           , ResultLog result
                           )
@@ -60,15 +59,15 @@ newtype BitClimbSearch result a =
 instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
   type SearchConfig BitClimbSearch = Config
   type SearchAux    BitClimbSearch =
-    (StdGen, Array Int BitString) -- problem getting the Maybe result out here 
+    (StdGen, MultiBitString) -- problem getting the Maybe result out here
 
-  -- I should clean up all the get/put stuff into something
-  -- more straightforward. It's hard to follow as it is.
-
+  -- | Returns the nth param, which is represented by the nth element
+  --   in the bitstring list in the search state.
   getParam i = do
     (_,bstr,_,_) <- get
-    return $ bitStringToNum $ bstr ! i
+    return $ bitStringToNum $ nthParam bstr i
 
+  -- | Run the hill climbing search.
   runSearch cfg (BitClimbSearch m) = do
     stdGen <- newStdGen
 

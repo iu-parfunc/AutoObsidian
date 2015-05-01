@@ -81,7 +81,7 @@ main = do
 
     exhaustive2Param = do
       putStrLn "Exhaustive search"
-      execSearch (ES.Config [[x| x <- [1..100]],[x*32 | x <- [1..64]]])
+      execSearch (ES.Config [[x*32 | x <- [1..64]],[x*32| x <- [1..10]]])
                  (prog2Param :: ExhaustiveSearch Result (Maybe Result))
  
     random = do
@@ -119,9 +119,9 @@ prog2Param :: (MonadIO (m Result), SearchMonad Result m)
 prog2Param = do
   -- Get param settings 
 
-  small_th <- getParam 0
-  
-  kernel_th <- getParam 1
+  small_th <- getParam 1
+
+  kernel_th <- getParam 0
   
   
   liftIO $ putStrLn $ "Trying with kernel_th = " ++ show kernel_th ++ "\n" ++ 
@@ -130,9 +130,10 @@ prog2Param = do
   liftIO $ buildIt True small_th kernel_th 
 
   r <- liftIO $ runIt
-  liftIO $ putStrLn $ "Time for KERNEL_TH=" ++
-                      show kernel_th ++ "/" ++
-                      show small_th  ++ " was " ++ (show r)
+  liftIO $ putStrLn $ "Time for:\nKERNEL_TH=" ++
+                      show kernel_th ++ "\n" ++
+                      "CONFIG_SMALL_VERTEX_THRESHOLD=" ++
+                      show small_th  ++ "\n was " ++ (show r)
   return $ Just $ Result ([kernel_th],r) 
 
 
