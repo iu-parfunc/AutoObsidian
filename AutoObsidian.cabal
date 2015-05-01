@@ -56,6 +56,8 @@ library
                  , Auto.BitClimbSearch
                  , Auto.ResultLog
                  , Auto.BitString
+                 , Auto.Genome
+                 , Auto.GeneticSearch
 
   -- Modules included in this library but not exported.
   -- other-modules:
