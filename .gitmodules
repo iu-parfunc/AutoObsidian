@@ -4,3 +4,7 @@
 [submodule "gpu_graph"]
 	path = gpu_graph
 	url = git@gitlab.crest.iu.edu:gpu-graphs/gpu_graph.git
+[submodule "interface_brainstorming/02_monad-tune"]
+	path = interface_brainstorming/02_monad-tune
+#	url = https://github.com/vollmerm/monad-tune
+        url = git@github.com:vollmerm/monad-tune.git
