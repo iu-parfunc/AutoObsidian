@@ -63,20 +63,21 @@ bitCount  = 10
 -- testing 
 main = do
 
-  -- putStrLn "Bit climb search"
-  -- res <- execSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
-  -- putStrLn "Best param"
-  -- putStrLn $ show $ peek $ resultLogBest res
+  putStrLn "Bit climb search"
+  res <- execSearch (BS.Config bitCount 1 100 True) (prog :: BitClimbSearch Result (Maybe Result))
+  putStrLn "Best param"
+  putStrLn $ show $ peek $ resultLogBest res
 
   -- putStrLn "Random search"
   -- res <- execSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
   -- putStrLn "Best param"
   -- putStrLn $ show $ peek $ resultLogBest res 
 
-  putStrLn "Exhaustive search"
-  res <- execSearch (ES.Config [[x*32| x <- [1..32]]]) (prog :: ExhaustiveSearch Result (Maybe Result))
-  putStrLn "Best param"
-  putStrLn $ show $ peek $ resultLogBest res
+  -- putStrLn "Exhaustive search"
+  -- --res <- execSearch (ES.Config [[x*32| x <- [1..32]]]) (prog :: ExhaustiveSearch Result (Maybe Result))
+  -- res <- execSearch (ES.Config [[x| x <- [1..1024]]]) (prog :: ExhaustiveSearch Result (Maybe Result))
+  -- putStrLn "Best param"
+  -- putStrLn $ show $ peek $ resultLogBest res
 
   let (b, Just a) = resultCSV res
   putStrLn $ a 
