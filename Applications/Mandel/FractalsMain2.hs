@@ -14,6 +14,8 @@ import Fractals
 import Prelude hiding (replicate, writeFile)
 import Prelude as P
 
+import Data.List
+
 -- import Obsidian
 import Obsidian.Run.CUDA.Exec
 
@@ -44,6 +46,10 @@ instance Ord Result where
 instance Show Result where
   show (Result (p,r)) = show p ++ " | " ++ show r
 
+instance CSV Result where
+  toCSVRow (Result (xs, d)) =
+    unwords (intersperse "," (map show xs)) ++ "," ++ show d 
+
 -- parameters
 -- threads   = 256
 blocks, imageSize, identity, count, maxNum, bitCount :: Int
@@ -62,15 +68,18 @@ main = do
   -- putStrLn "Best param"
   -- putStrLn $ show $ peek $ resultLogBest res
 
-  putStrLn "Random search"
-  res <- execSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
-  putStrLn "Best param"
-  putStrLn $ show $ peek $ resultLogBest res 
+  -- putStrLn "Random search"
+  -- res <- execSearch (RS.Config [(0,1024)] 100) (prog :: RandomSearch Result (Maybe Result))
+  -- putStrLn "Best param"
+  -- putStrLn $ show $ peek $ resultLogBest res 
 
   putStrLn "Exhaustive search"
   res <- execSearch (ES.Config [[x*32| x <- [1..32]]]) (prog :: ExhaustiveSearch Result (Maybe Result))
   putStrLn "Best param"
   putStrLn $ show $ peek $ resultLogBest res
+
+  let (b, Just a) = resultCSV res
+  putStrLn $ a 
 
 prog :: (MonadIO (m Result), SearchMonad Result m) 
      => m Result (Maybe Result)

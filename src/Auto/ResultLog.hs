@@ -13,7 +13,6 @@ Datastructures used to store result logs during search.
 -}
 module Auto.ResultLog where
 
-
 -- | a forgetful lifo.
 data FLIFO a =
   FLIFO {flifoLen  :: Maybe Int
@@ -57,3 +56,19 @@ addResult resLog res =
         Nothing -> res
         (Just r) -> min r res
 
+-- | The user needs to specify a CSV instance for the
+-- result type in use
+class CSV a where
+  toCSVRow :: a -> String
+
+-- | Gives two CSV formatted strings.
+--   The top results and all. 
+resultCSV :: CSV result => ResultLog result -> (String,Maybe String) 
+resultCSV res = ( unlines $ map toCSVRow (flifoData bestRes)
+                , case allRes of
+                   Just r -> Just $ unlines $ map toCSVRow (flifoData r)
+                   Nothing -> Nothing )
+                
+  where
+    bestRes = resultLogBest res
+    allRes  = resultLogAll  res 
