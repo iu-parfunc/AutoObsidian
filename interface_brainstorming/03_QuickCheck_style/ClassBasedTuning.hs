@@ -1,5 +1,10 @@
 {-# LANGUAGE ConstraintKinds #-}
--- |
+
+-- | This version explores the simple option of using type-classes to
+-- overload on the type of the tuning input parameters.  This enables
+-- us to remain polymorphic in how many "dimensions" are being tuned.
+-- It enables some forms of composability, but requires that the
+-- dimensionality be known statically at type checking time.
 
 module ClassBasedTuning where
 
