@@ -58,7 +58,9 @@ instance Ord Result where
 instance Show Result where
   show (Result (ls,r)) = show ls ++ " | " ++ show r
 
-
+instance CSV Result where
+  toCSVRow (Result (xs, d)) =
+    unwords (intersperse "," (map show xs)) ++ "," ++ show d
 
 main :: IO ()
 main = do
