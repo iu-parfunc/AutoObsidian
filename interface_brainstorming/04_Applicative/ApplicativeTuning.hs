@@ -1,4 +1,6 @@
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RankNTypes #-}
+
 -- | This demonstrates how to use Applicative rather than Monad to
 -- provide a Reader-like construct for accessing tunable parameters.
 -- Using Applicative means that we can ascertain exactly what tunables
@@ -12,12 +14,14 @@ module ApplicativeTuning
  , getParam
    -- * Running and searching
  , tune
+ , tunePure
  , runMin
    -- * Temporary
  , test
  ) where
 
 import Control.Applicative
+import Control.Monad.ST
 import System.Random.MWC
 
 -- | We restrict tunable parameters to Int values for now.
@@ -55,9 +59,6 @@ effort = 1000
 
 -- | Run a tunable computation and retrieve the best found tuning
 -- parameters and their score, returning them in addition to the result.
---
--- Note, if the underlying monad were something OTHER than IO, then
--- the tuner would need to be able to run it, so as to extract scores.
 tune :: Tune IO (a,Score) -> IO (a, Params, Score)
 tune (Tune f ranges) =
   -- Currently this does a simple random search:
@@ -75,6 +76,29 @@ tune (Tune f ranges) =
     do params <- mapM (`uniformR` gen) ranges
        (a,sc) <- f params
        return (a,params,sc)
+
+-- If the underlying monad is something OTHER than IO, then the tuner
+-- would needs to be able to run it, so as to extract scores.
+tunePure :: Monad m => (forall b . m b -> b) ->
+            Tune m (a,Score) ->  (a, Params, Score)
+tunePure runner (Tune fn ranges) = runST $
+  -- Currently this does a simple random search:
+   do gen  <- create
+      strt <- go gen
+      loop gen strt effort
+  where
+  loop _gen best 0 = return best
+  loop gen best@(_,_,bscr) n =
+    do new@(_,_,nscr) <- go gen
+       if nscr > bscr
+          then loop gen new (n-1)
+          else loop gen best (n-1)
+  go gen =
+    do params <- mapM (`uniformR` gen) ranges
+       let (a,sc) = runner (fn params)
+       return (a,params,sc)
+
+
 
 -- | A quick way to run with all the *minimum* parameter settings,
 -- i.e. without performinging any tuning.
