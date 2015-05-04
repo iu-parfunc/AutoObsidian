@@ -17,8 +17,9 @@ module ApplicativeTuning
  , test
  ) where
 
-import Control.Applicative
-import Data.List
+import           Control.Applicative
+import           Data.List
+import qualified Data.Vector.Unboxed as V
 
 -- | We restrict tunable parameters to Int values for now.
 type Params = [Int]
