@@ -96,7 +96,7 @@ instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
         resComp (Nothing,_) a = a
 
         -- Try a mutation and keep it if it's better than the current result
-        testBit b p iter = do
+        testBit b p = do
           (g,bstr,res,rlog) <- get
           let bstrNew = flipBitAt b p bstr
           put (g,bstrNew,Nothing,rlog)
@@ -106,7 +106,7 @@ instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
           let rlog' =
                 case resNew of
                   Nothing -> rlog
-                  Just r  -> addResult rlog r iter
+                  Just r  -> addResult rlog r
 
               
           put (g,bstrBest,resBest,rlog')
@@ -123,12 +123,11 @@ instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
           let (r1,g1)  = randomR (0,(numBits cfg)-1) g
               (r2,g2) = randomR (0,(numParams cfg)-1) g1
           put (g2,bstr,res,rlog)
-          testBit r1 r2 experimentNum
+          testBit r1 r2
           return ()
 
     (_,(stdg,a,_,rlog)) <- runStateT (runReaderT m' cfg)
                         (g'', init, Nothing,
                          ResultLog (mkFLIFO $ Just 10)
-                                   (Just $ mkFLIFO Nothing)
-                                   [] )
+                                   (Just $ mkFLIFO Nothing))
     return $ ((stdg,a),rlog) -- peek $ resultLogBest rlog

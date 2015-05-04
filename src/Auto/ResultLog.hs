@@ -37,24 +37,20 @@ peek (FLIFO _ (x:_)) = Just x
 data ResultLog result =
   ResultLog { resultLogBest :: FLIFO result
             , resultLogAll  :: Maybe (FLIFO result)
-            , resultLogBestOverTime :: [(Int,result)] 
             }
-
 
 
 
 -- | add a result to the log.
 --   Takes a resultlog, a result and an iteration no. 
 addResult :: Ord result
-          => ResultLog result -> result -> Int -> ResultLog result
-addResult resLog res iter =
+          => ResultLog result -> result ->  ResultLog result
+addResult resLog res =
   resLog { resultLogBest = push (resultLogBest resLog) bestSoFar'
          , resultLogAll  =
            case resultLogAll resLog of
              Nothing -> Nothing
-             Just lifo -> Just $ push lifo res
-         , resultLogBestOverTime =
-             (iter,bestSoFar'):resultLogBestOverTime resLog}  
+             Just lifo -> Just $ push lifo res }  
 
   where
     bestSoFar = peek (resultLogBest resLog)
@@ -79,3 +75,4 @@ resultCSV res = ( unlines $ map toCSVRow (flifoData bestRes)
   where
     bestRes = resultLogBest res
     allRes  = resultLogAll  res 
+
