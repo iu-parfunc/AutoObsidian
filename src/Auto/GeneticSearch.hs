@@ -166,7 +166,7 @@ instance (Ord result, Show result) => SearchMonad result GeneticSearch where
           (p,ind,rs,rlog) <- get
           let results = map fromJust $ filter isJust rs
               best = head $ sort results
-              rlog' = addResult rlog best
+              rlog' = addResult rlog best 1 -- HACK HACK HACK !!!! 
           put (p,ind,rs,rlog')
           if (verbose cfg)
             then do liftIO $ putStrLn $ "Best in generation: " ++ (show best)
@@ -203,5 +203,7 @@ instance (Ord result, Show result) => SearchMonad result GeneticSearch where
 
     (_,(p,_,_,rlog)) <- runStateT (runReaderT m' cfg)
                          (initPop,0,[],
-                          ResultLog (mkFLIFO $ Just 10) (Just $ mkFLIFO Nothing))
+                          ResultLog (mkFLIFO $ Just 10)
+                                    (Just $ mkFLIFO Nothing)
+                                    [])
     return (p,rlog)

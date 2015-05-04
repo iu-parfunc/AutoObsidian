@@ -61,7 +61,7 @@ instance Ord result => SearchMonad result ExhaustiveSearch where
   runSearch cfg (ExhaustiveSearch m) = do
 
 
-    let m' combos = forM_ combos $ \params ->
+    let m' combos = forM_ (zip combos [1..])$ \(params,iter) ->
           do
             (old_params,rlog) <- get
             put (params,rlog)
@@ -71,7 +71,7 @@ instance Ord result => SearchMonad result ExhaustiveSearch where
             let rlog' =
                   case m_res of
                     Nothing -> rlog
-                    Just r  -> addResult rlog r
+                    Just r  -> addResult rlog r iter
 
             put (old_params, rlog')
 
@@ -82,6 +82,7 @@ instance Ord result => SearchMonad result ExhaustiveSearch where
     (_a,s) <- runStateT (runReaderT m'' cfg)
                         ( []
                         , ResultLog (mkFLIFO $ Just 10)
-                                    (Just $ mkFLIFO Nothing))
+                                    (Just $ mkFLIFO Nothing)
+                                    [])
     return s -- snd s -- $ peek (resultLogBest (snd s))
 

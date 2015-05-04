@@ -66,7 +66,7 @@ instance Ord result => SearchMonad result RandomSearch where
   
   
     -- number of runs is now configurable
-    let m' = forM_ [1..(numIters cfg)] $ \ _experiment_num ->
+    let m' = forM_ [1..(numIters cfg)] $ \iter ->
           -- experiment_num could be used for something (info printing)
           do
 
@@ -77,12 +77,13 @@ instance Ord result => SearchMonad result RandomSearch where
             let rlog' =
                   case m_res of
                     Nothing -> rlog
-                    Just r -> addResult rlog r
+                    Just r -> addResult rlog r iter
 
             put (g,rlog')
 
     (_a,s) <- runStateT (runReaderT m' cfg)
                         ( stdGen
                        , ResultLog (mkFLIFO $ Just 10)
-                                   (Just $ mkFLIFO Nothing))
+                                   (Just $ mkFLIFO Nothing)
+                                   [])
     return s --  $ snd s -- $ peek (resultLogBest (snd s))
