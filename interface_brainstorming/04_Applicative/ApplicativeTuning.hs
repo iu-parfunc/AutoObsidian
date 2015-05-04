@@ -102,6 +102,16 @@ example3 :: Tune IO ((Int,Double),Score)
 example3 = (\x y -> ((x,y), fromIntegral x + y))
            <$> example1 <*> example2
 
+-- Illustrate using the underlying monad:
+example4 :: Tune IO ((Int,Double),Score)
+example4 =
+  (\x _ -> x) <$>
+  example3 <*>
+  lift (putStrLn "IO inside example4")
+
+lift :: m a -> Tune m a
+lift act = Tune (\[] -> act) []
+
 test :: IO ()
 test =
   do putStrLn "First, runMin:"
@@ -111,6 +121,9 @@ test =
      putStrLn $ "  example1: "++show x
      putStrLn $ "  example2: "++show y
      putStrLn $ "  example3: "++show z
+
+     w <- (runMin example4)
+     putStrLn $ "  example4: "++show w
 
      putStr "Next, random search\n  "
      a <- tune example3
