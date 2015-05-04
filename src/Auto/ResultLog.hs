@@ -76,3 +76,6 @@ resultCSV res = ( unlines $ map toCSVRow (flifoData bestRes)
     bestRes = resultLogBest res
     allRes  = resultLogAll  res 
 
+
+
+

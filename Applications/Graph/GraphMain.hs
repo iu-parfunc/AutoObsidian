@@ -16,7 +16,8 @@ import Obsidian.Run.CUDA.Exec
 import Control.Monad.State
 
 import Data.Word
-import Data.List 
+import Data.List
+import Data.Maybe 
 
 -- Autotuning framework 
 import Auto.Score
@@ -78,7 +79,16 @@ main = do
 
   let filename = argsToFileName args
   let (b, Just a) = resultCSV res
-  writeFile filename $ a 
+  writeFile filename $ a
+
+  -- HACKS: Get result over time series 
+  let resultOverTime =
+       zip [[x]|x <- [(1::Int)..]]
+           (reverse $ (map (\(Result p) -> snd p)
+                $ flifoData $ fromJust $ resultLogAll res))
+  writeFile ("timeseries"++filename)
+    $ unlines
+    $ map (toCSVRow . Result) resultOverTime 
     
   where
     argsToFileName [] = "graph_EXHAUSTIVE_1.csv"
