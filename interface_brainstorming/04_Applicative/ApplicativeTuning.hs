@@ -28,6 +28,7 @@ type Score = Double
 
 -- | The datatype for (auto)tunable computations.
 data Tune a =
+   -- TODO: run needs to return "m a" and Tune should be parameterized over "m".
      Tune { _run :: (Params -> a)
             -- ^ Run a tunable computation
           , allParams :: [Range] }
