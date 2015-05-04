@@ -17,9 +17,9 @@ module ApplicativeTuning
  , test
  ) where
 
-import           Control.Applicative
-import           Data.List
-import qualified Data.Vector.Unboxed as V
+import Control.Applicative
+import Data.List
+import System.Random.MWC
 
 -- | We restrict tunable parameters to Int values for now.
 type Params = [Int]
@@ -28,7 +28,7 @@ type Score = Double
 
 -- | The datatype for (auto)tunable computations.
 data Tune a =
-     Tune { run :: (Params -> a)
+     Tune { _run :: (Params -> a)
             -- ^ Run a tunable computation
           , allParams :: [Range] }
 
@@ -50,8 +50,23 @@ instance Applicative Tune where
 
 -- | Run a tunable computation and retrieve the best found tuning
 -- parameters and their score, returning them in addition to the result.
-tune :: Tune (a,Score) -> (a, Params, Score)
-tune = undefined
+tune :: Tune (a,Score) -> IO (a, Params, Score)
+tune (Tune f ranges) =
+  -- Currently this does a simple random search:
+  withSystemRandom $ asGenIO $ \gen ->
+   do strt <- go gen
+      loop gen strt (1000::Int)
+  where
+  loop _gen best 0 = return best
+  loop gen best@(_,_,bscr) n =
+    do new@(_,_,nscr) <- go gen
+       if nscr > bscr
+          then loop gen new (n-1)
+          else loop gen best (n-1)
+  go gen =
+    do params <- mapM (`uniformR` gen) ranges
+       let (a,sc) = f params
+       return (a,params,sc)
 
 -- | A quick way to run with all the *minimum* parameter settings,
 -- i.e. without performinging any tuning.
@@ -75,8 +90,8 @@ example2 =
   (\x y -> fromIntegral (x+y)) <$> getParam (11,12) <*> getParam (13,14)
 
 -- Illustrate composability:
-example3 :: Tune (Score,(Int,Double))
-example3 = (\x y -> (fromIntegral x + y, (x,y)))
+example3 :: Tune ((Int,Double),Score)
+example3 = (\x y -> ((x,y), fromIntegral x + y))
            <$> example1 <*> example2
 
 test :: IO ()
@@ -87,4 +102,6 @@ test =
      putStrLn $ "  example3: "++show (runMin example3)
 
      putStrLn "Next, random search"
+     x <- tune example3
+     print x
      return ()
