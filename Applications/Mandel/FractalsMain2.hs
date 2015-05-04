@@ -69,7 +69,10 @@ main = do
 
   args <- getArgs
 
-  -- hacked up argument handling 
+  -- hacked up argument handling
+  -- TODO: Uniform handling of this across all apps would be nice.
+  --       Some good argument handling!
+  --       This is just a mess of copynpaste code 
   res <- case args of 
      ("RANDOM":_) -> random (tail args)
      ("BITCLIMB":_) -> bitclimb (tail args)
@@ -129,6 +132,10 @@ main = do
            execSearch (BS.Config bitCount 2 100 True)
                       (prog2 :: BitClimbSearch Result (Maybe Result))
   
+
+
+  -- TODO:
+  --  Add rest of the searches.
 
     
 -- 2d search Both params 

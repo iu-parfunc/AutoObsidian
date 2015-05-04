@@ -68,34 +68,62 @@ main = do
   args <- getArgs
 
   res <- case args of
-    ["RANDOM"] -> random
-    ["BITCLIMB"] -> bitclimb
-    _ -> exhaustive2Param -- Just testing 
+    ("RANDOM":_) -> random (tail args) 
+    ("BITCLIMB":_) -> bitclimb (tail args) 
+    ("EXHAUSTIVE":_) -> exhaustive (tail args) 
+    _ -> exhaustive [] 
 
   putStrLn "Best param"
   putStrLn $ show $ peek $ resultLogBest res
+
+  let filename = argsToFileName args
+  let (b, Just a) = resultCSV res
+  writeFile filename $ a 
     
   where
-    exhaustive = do
+    argsToFileName [] = "graph_EXHAUSTIVE_1.csv"
+    argsToFileName [x] = "graph_" ++ x ++ "_1.csv"
+    argsToFileName [x,y] = "graph_" ++ x ++ "_" ++ y ++ ".csv" 
+    
+    exhaustive args = do
       putStrLn "Exhaustive search"
-      execSearch (ES.Config [[x*32 | x <- [1..64]]])
-                 (prog :: ExhaustiveSearch Result (Maybe Result))
-
-    exhaustive2Param = do
-      putStrLn "Exhaustive search"
-      execSearch (ES.Config [[x*32 | x <- [1..64]],[x*32| x <- [1..10]]])
-                 (prog2Param :: ExhaustiveSearch Result (Maybe Result))
- 
-    random = do
+      case args of
+        [] -> 
+          execSearch (ES.Config [[x*32 | x <- [1..64]]])
+                     (prog :: ExhaustiveSearch Result (Maybe Result))
+        ["1"] -> 
+          execSearch (ES.Config [[x*32 | x <- [1..64]]])
+                     (prog :: ExhaustiveSearch Result (Maybe Result))
+        ["2"] ->
+          execSearch (ES.Config [ [x*32 | x <- [1..64]]
+                                , [x | x <- [1..64]]])
+             (prog2Param :: ExhaustiveSearch Result (Maybe Result))
+  
+    random args = do
       putStrLn "Random search"
-      execSearch (RS.Config [(1,1024)] 1000)
-                 (prog :: RandomSearch Result (Maybe Result))
-      
-    bitclimb = do 
+      case args of
+        [] -> 
+          execSearch (RS.Config [(1,1024)] 1000)
+                     (prog :: RandomSearch Result (Maybe Result))
+        ["1"] -> 
+          execSearch (RS.Config [(1,1024)] 1000)
+                     (prog :: RandomSearch Result (Maybe Result))
+        ["2"] ->
+          execSearch (RS.Config [(1,2048),(1,64)] 1000)
+                     (prog2Param :: RandomSearch Result (Maybe Result))
+          
+    bitclimb args = do 
       putStrLn "Bit climb search"
-      execSearch (BS.Config 10 1 100 True)
-                 (prog :: BitClimbSearch Result (Maybe Result)) 
-
+      case args of
+        [] -> 
+          execSearch (BS.Config 10 1 100 True)
+                     (prog :: BitClimbSearch Result (Maybe Result)) 
+        ["1"] ->
+          execSearch (BS.Config 10 1 100 True)
+                     (prog :: BitClimbSearch Result (Maybe Result))
+        ["2"] ->
+          execSearch (BS.Config 10 2 100 True)
+                     (prog2Param :: BitClimbSearch Result (Maybe Result))
              
   
                      
