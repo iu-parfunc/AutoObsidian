@@ -84,15 +84,14 @@ main = do
   let (b, Just a) = resultCSV res
   writeFile filename $ a 
 
-  let resultOverTime =
-       zip [[x]|x <- [(1::Int)..]]
-           (reverse $ (map (\(Result p) -> snd p)
-                $ flifoData $ fromJust $ resultLogAll res))
-  writeFile ("timeseries"++filename)
-    $ unlines
-    $ map (toCSVRow . Result) resultOverTime 
+
+  let resultOverTime = unlines 
+        $ map (\(iter,Result p) -> show iter ++ ", " ++ show (snd p))
+                                 (resultLogBestOverTime res)
+  writeFile ("timeseries"++filename) resultOverTime 
 
 
+  
   
    where
      argsToFileName [] = "mandel_EXHAUSTIVE_THREADS.csv"

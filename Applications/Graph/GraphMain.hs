@@ -81,7 +81,7 @@ main = do
   let (b, Just a) = resultCSV res
   writeFile filename $ a
 
-  -- HACKS: Get result over time series 
+
   let resultOverTime =
        zip [[x]|x <- [(1::Int)..]]
            (reverse $ (map (\(Result p) -> snd p)
@@ -89,7 +89,10 @@ main = do
   writeFile ("timeseries"++filename)
     $ unlines
     $ map (toCSVRow . Result) resultOverTime 
-    
+
+
+
+
   where
     argsToFileName [] = "graph_EXHAUSTIVE_1.csv"
     argsToFileName [x] = "graph_" ++ x ++ "_1.csv"
