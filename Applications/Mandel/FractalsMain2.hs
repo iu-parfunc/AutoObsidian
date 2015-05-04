@@ -234,7 +234,8 @@ prog1 = do
              t1   <- getCurrentTime
 
              let timed = realToFrac $ diffUTCTime t1 t0
-             putStrLn $ "Time for threads=" ++ (show threads) ++ "and blocks=" ++ show blocks ++ " was " ++ (show timed)
+             putStrLn $ "Time for threads=" ++ (show threads) ++
+                        " was " ++ (show timed)
              destroyCtx ctx
              return $ Just $ Result ([threads],timed)
 
