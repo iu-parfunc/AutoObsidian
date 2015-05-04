@@ -48,8 +48,8 @@ instance Applicative Tune where
             (l1 ++ l2)
 
 -- | Run a tunable computation and retrieve the best found tuning
--- parameters and their score.  We also get the result!
-tune :: Tune a -> (a, Params, Score)
+-- parameters and their score, returning them in addition to the result.
+tune :: Tune (a,Score) -> (a, Params, Score)
 tune = undefined
 
 -- | A quick way to run with all the *minimum* parameter settings,
@@ -74,9 +74,16 @@ example2 =
   (\x y -> fromIntegral (x+y)) <$> getParam (11,12) <*> getParam (13,14)
 
 -- Illustrate composability:
-example3 :: Tune (Int,Double)
-example3 =
-  (,) <$> example1 <*> example2
+example3 :: Tune (Score,(Int,Double))
+example3 = (\x y -> (fromIntegral x + y, (x,y)))
+           <$> example1 <*> example2
 
-test :: Integer
-test = 3
+test :: IO ()
+test =
+  do putStrLn "First, runMin:"
+     putStrLn $ "  example1: "++show (runMin example1)
+     putStrLn $ "  example2: "++show (runMin example2)
+     putStrLn $ "  example3: "++show (runMin example3)
+
+     putStrLn "Next, random search"
+     return ()
