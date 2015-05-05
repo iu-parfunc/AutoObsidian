@@ -54,7 +54,9 @@ addResult resLog res iter =
              Just lifo -> Just $ push lifo res
          , resultLogBestOverTime =
              (iter,bestSoFar'):resultLogBestOverTime resLog}  
-
+  -- LOOK FOR A BUG HERE:
+  --  THe timeseries looks strange it should
+  --  be decreasing but there are steps that break that! 
   where
     bestSoFar = peek (resultLogBest resLog)
     bestSoFar' =
