@@ -108,8 +108,8 @@ main = do
           execSearch (ES.Config [[x*32 | x <- [1..64]]])
                      (prog :: ExhaustiveSearch Result (Maybe Result))
         ["2"] ->
-          execSearch (ES.Config [ [x*32 | x <- [1..64]]
-                                , [x | x <- [1..64]]])
+          execSearch (ES.Config [ [x*64 | x <- [1..32]]
+                                , [x*2 | x <- [0..32]]])
              (prog2Param :: ExhaustiveSearch Result (Maybe Result))
   
     random args = do
