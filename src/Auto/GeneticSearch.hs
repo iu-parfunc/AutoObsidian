@@ -65,7 +65,7 @@ tournament ps rs i =
      else
        let produceOffspring _ = do
              -- Maybe we should ensure these are unique random values
-             contestantInds <- getRandomRs (0,num1)
+             contestantInds <- getRandomRs (0,num1-1)
              let contestants = map (\i -> (ps !! i, rs !! i))
                              $ take i contestantInds
                  ranked = sortBy rankFunc contestants
@@ -175,7 +175,7 @@ instance (Ord result, Show result) => SearchMonad result GeneticSearch where
             else return ()
 
         evalPop = do
-          rs <- forM [0..(popSize cfg)] $ \ind -> do
+          rs <- forM [0..(popSize cfg)-1] $ \ind -> do
             (p,_,rs,rlog) <- get
             put (p,ind,rs,rlog)
             score <- m
