@@ -99,7 +99,7 @@ main = do
       putStrLn "Exhaustive search"
       case args of
         [] -> 
-          execSearch (ES.Config [[x*32 | x <- [1..64]]])
+          execSearch (ES.Config [[x*32 | x <- [64..128]]])
                      (prog :: ExhaustiveSearch Result (Maybe Result))
         ["1"] -> 
           execSearch (ES.Config [[x*32 | x <- [1..64]]])
@@ -174,7 +174,7 @@ prog2Param = do
                       show kernel_th ++ "\n" ++
                       "CONFIG_SMALL_VERTEX_THRESHOLD=" ++
                       show small_th  ++ "\n was " ++ (show r)
-  return $ Just $ Result ([kernel_th],r) 
+  return $ Just $ Result ([kernel_th,small_th],r) 
 
 
 ----------------------------------------------------------------------
