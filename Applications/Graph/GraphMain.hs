@@ -102,7 +102,7 @@ main = do
           execSearch (ES.Config [[x*32 | x <- [64..128]]])
                      (prog :: ExhaustiveSearch Result (Maybe Result))
         ["1"] -> 
-          execSearch (ES.Config [[x*32 | x <- [1..64]]])
+          execSearch (ES.Config [[x*32 | x <- [64..128]]])
                      (prog :: ExhaustiveSearch Result (Maybe Result))
         ["2"] ->
           execSearch (ES.Config [ [x*64 | x <- [1..32]]
