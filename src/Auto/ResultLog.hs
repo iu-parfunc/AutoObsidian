@@ -53,7 +53,9 @@ addResult resLog res iter =
              Nothing -> Nothing
              Just lifo -> Just $ push lifo res
          , resultLogBestOverTime =
-             (iter,bestSoFar'):resultLogBestOverTime resLog}  
+             if (res < bestSoFar')
+             then (error "NOOO") 
+             else (iter,bestSoFar'):resultLogBestOverTime resLog}  
   -- LOOK FOR A BUG HERE:
   --  THe timeseries looks strange it should
   --  be decreasing but there are steps that break that! 
