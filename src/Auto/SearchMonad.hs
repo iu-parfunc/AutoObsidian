@@ -59,9 +59,11 @@ import Auto.ResultLog
 --   their own SearchConfig and SearchAux.
 class (Ord result, Monad (m result)) => SearchMonad result m where
 
-  type SearchConfig m -- ^ The configuration settings for a particular search.
+  -- | The configuration settings for a particular search.
+  type SearchConfig m
 
-  type SearchAux    m -- ^ Values returned in addition to the result.
+  -- | Values returned in addition to the result.
+  type SearchAux    m
 
   -- | Run a search to obtain a full resultlog together
   --   with any Auxiliary data a specific instance decides to return.
