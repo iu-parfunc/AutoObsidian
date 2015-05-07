@@ -102,13 +102,13 @@ instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
           put (g,bstrNew,Nothing,rlog)
           resNew <- m
           let (resBest,bstrBest) = resComp (resNew,bstrNew) (res,bstr)
-
           let rlog' =
+                -- Only record in log if we move to the new solution
                 case resNew of
                   Nothing -> rlog
-                  Just r  -> addResult rlog r iter
-
-              
+                  Just r  -> if (resBest == resNew)
+                             then addResult rlog r iter
+                             else rlog
           put (g,bstrBest,resBest,rlog')
           if (verbose cfg)
             then do

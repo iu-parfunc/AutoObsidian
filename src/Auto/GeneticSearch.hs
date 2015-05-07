@@ -94,6 +94,18 @@ mutation ps prob =
                 return $ mutateBitString b bit
         else return b
 
+-- | Find the best performing individual in each generation and make
+--   sure it survives to the next generation.
+elitism
+  :: (Ord result)
+  => Population
+  -> [result]
+  -> MultiBitString
+elitism ps rs =
+  let (bestP,_) = head $ sortBy f $ zip ps rs
+      f (_,r1) (_,r2) = compare r1 r2
+  in bestP
+
 -- | This function launches the tournament and mutation functions,
 --   given a population, a list of results, a mutation probability,
 --   and a tournament size.
@@ -113,9 +125,10 @@ generation ps mrs prob size = do
     case mr of
      Just r -> return r
      Nothing -> error "Result not evaluated"
+  elite <- return $ elitism ps rs
   ps <- tournament ps rs size
   ps <- mutation ps prob
-  return ps
+  return (elite:(tail ps))
 
 -- | For the internal state, we need a list of individuals (population)
 --   as well as a currently selected individual. This is
@@ -151,7 +164,6 @@ instance (Ord result, Show result) => SearchMonad result GeneticSearch where
     (bstr,n,_,_) <- get
     return $ bitStringToNum $ nthIndividualParam bstr n i
 
-  -- runSearch cfg (GeneticSearch m) = undefined
   runSearch cfg (GeneticSearch m) = do
     stdGen <- newStdGen -- we should be threading this through the search
 
@@ -162,12 +174,11 @@ instance (Ord result, Show result) => SearchMonad result GeneticSearch where
           in newI : (initFunc (i-1) g'')
         initPop = initFunc (popSize cfg) stdGen
 
-        recordBest = do
+        recordBest iter = do
           (p,ind,rs,rlog) <- get
           let results = map fromJust $ filter isJust rs
               best = head $ sort results
-              rlog' = addResult rlog best 1 ---HACK HACK
-              -- I dont know how to set iter counter here. 
+              rlog' = addResult rlog best iter
           put (p,ind,rs,rlog')
           if (verbose cfg)
             then do liftIO $ putStrLn $ "Best in generation: " ++ (show best)
@@ -183,23 +194,23 @@ instance (Ord result, Show result) => SearchMonad result GeneticSearch where
           (p,ind,_,rlog) <- get
           put (p,ind,rs,rlog)
 
-        handlePop = do
+        handlePop iter = do
           (p,ind,rs,rlog) <- get
           -- this should be prettier...
           -- using io just for random numbers is silly
           p' <- liftIO $ evalRandIO $ generation p rs (mutProb cfg) (tournSize cfg)
           put (p',ind,rs,rlog)
           evalPop
-          recordBest
+          recordBest iter
           return ()
 
-        m' = forM_ [1..(numIters cfg)] $ \_iter -> do
+        m' = forM_ [1..(numIters cfg)] $ \iter -> do
           (_,_,rs,_) <- get
           if null rs
             then do evalPop
-                    handlePop
+                    handlePop iter
                     return ()
-            else do handlePop
+            else do handlePop iter
                     return ()
 
     (_,(p,_,_,rlog)) <- runStateT (runReaderT m' cfg)
