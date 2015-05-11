@@ -95,7 +95,7 @@ main = do
 
    where
      argsToFileName [] = "mandel_EXHAUSTIVE_THREADS.csv"
-     argsToFileName [x] = "mandel_" ++ x ++ "_TREADS.csv"
+     argsToFileName [x] = "mandel_" ++ x ++ "_THREADS.csv"
      argsToFileName [x,y] = "mandel_" ++ x ++ "_" ++ y ++ ".csv"
 
      exhaustive args = do

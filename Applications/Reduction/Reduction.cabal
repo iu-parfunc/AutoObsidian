@@ -61,6 +61,8 @@ executable Reduction
                , Obsidian >= 0.4.0.0 
                , vector >= 0.10.12.2
                , mtl >= 2.1.3.1
+               , AutoObsidian >= 0.1.0.0
+               , time >= 1.4.2
   
   -- Directories containing source files.
   -- hs-source-dirs:      

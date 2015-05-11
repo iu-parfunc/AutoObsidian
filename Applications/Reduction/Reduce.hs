@@ -4,16 +4,50 @@
 {-# LANGUAGE ScopedTypeVariables #-} 
 module Main where
 
-
-import Obsidian
+-- Obsidian
+import Obsidian hiding (tail, take)
 import Obsidian.CodeGen.CUDA
-import Obsidian.Run.CUDA.Exec hiding (exec) 
+import Obsidian.Run.CUDA.Exec hiding (exec)
+
+-- Autotuning
+import Auto.BitClimbSearch    as BS
+import Auto.ExhaustiveSearch  as ES
+import Auto.GeneticSearch     as GS
+import Auto.RandomSearch      as RS
+import Auto.ResultLog hiding (push)
+import Auto.SearchMonad
+
+-- Timing
+import Data.Time.Clock
+
+-- System
+import System.Environment
+import System.IO 
 
 import Data.Word
+import Data.List hiding (zipWith)
 import Control.Monad.State 
 
 import Prelude hiding (map,zipWith,sum,replicate,take,drop,iterate)
 import qualified Data.Vector.Storable as V
+
+-----------------------------------------------------------------
+-- Tuning related 
+-----------------------------------------------------------------
+data Result = Result ([Int],Double)
+
+instance Eq Result where
+  (Result (_,d1)) == (Result (_,d2)) = d1 == d2
+
+instance Ord Result where
+  compare (Result (_,d1)) (Result (_,d2)) = compare d1 d2
+
+instance Show Result where
+  show (Result (p,r)) = show p ++ " | " ++ show r
+
+instance CSV Result where
+  toCSVRow (Result (xs, d)) =
+    unwords (intersperse "," (map show xs)) ++ "," ++ show d
 
 
 -----------------------------------------------------------------
@@ -100,6 +134,9 @@ reductions2 warp_th f arr = asGridMap (hybrid_reduce' warp_th f) arr
 
 
 
+-----------------------------------------------------------------
+--
+----------------------------------------------------------------- 
 genIt :: (ToProgram (Pull EWord32 a -> Push Grid EWord32 a), Data a)
          => String
          -> (Pull EWord32 (SPull a) -> Push Grid EWord32 a)
@@ -112,7 +149,7 @@ genIt name kernel threads size =
     (kernel . splitUp size) 
 
 
-main = do
+testIt = do
   genIt "reduce" (reductions2 32  (+) :: Pull EWord32 (SPull EWord32) -> Push Grid EWord32 EWord32) 128 128
 
   putStrLn "VARYING WARP_TH (threads:128)" 
@@ -161,6 +198,7 @@ main = do
   
 -- main = genIt "reduce" (reductions (+) :: Pull EWord32 (SPull EWord32) -> Push Grid EWord32 EWord32) 128 128
 
+--main = testIt
 -----------------------------------------------------------------
 -- Execute it
 -----------------------------------------------------------------
@@ -179,3 +217,146 @@ execIt kernel chunk_size n_chunks threads blocks =
                               
       
 
+-----------------------------------------------------------------
+-- TUNING
+-----------------------------------------------------------------
+
+main = do
+
+  args <- getArgs
+
+  res <- case args of
+    ("RANDOM":_) -> random (tail args)
+    ("BITCLIMB":_) -> bitclimb (tail args)
+    ("EXHAUSTIVE":_) -> exhaustive (tail args)
+    ("SGA":_) -> genetic (tail args)
+    _ -> exhaustive []
+
+  let filename = argsToFileName args
+  let (b, Just a) = resultCSV res
+  writeFile filename $ a
+
+  let resultOverTime = unlines
+        $ map (\(iter,Result p) -> show iter ++ ", " ++ show (snd p))
+                                 (resultLogBestOverTime res)
+  writeFile ("timeseries"++filename) resultOverTime
+
+
+  where
+    argsToFileName [] = "reduce_EXHAUSTIVE_WARPTH.csv"
+    argsToFileName [x] = "recude_" ++ x ++ "_WARPTH.csv"
+    argsToFileName [x,y] = "reduce_" ++ x ++ "_" ++ y ++ ".csv"
+
+    exhaustive args = do
+      putStrLn "Exhaustive search"
+      case args of
+        [] ->
+          execSearch (ES.Config [[0..10]])
+                     (prog1 :: ExhaustiveSearch Result (Maybe Result)) 
+        ["WARPTH"] -> 
+          execSearch (ES.Config [[0..10]])
+                     (prog1 :: ExhaustiveSearch Result (Maybe Result))
+        ["BOTH"] ->
+          execSearch (ES.Config [ [1..12]
+                                , [0..31]])
+                     (prog2 :: ExhaustiveSearch Result (Maybe Result))
+        --["BOTH"] ->
+        --  execSearch (ES.Config [ [4..10]
+        --                        , [0..31]])
+        --             (prog2 :: ExhaustiveSearch Result (Maybe Result))
+          
+    random args = do
+      putStrLn "Random search"
+      case args of
+        [] ->
+          execSearch (RS.Config [(0,10)] 10)
+                     (prog1 :: RandomSearch Result (Maybe Result))
+        ["WARPTH"] ->
+          execSearch (RS.Config [(0,10)] 10)
+                     (prog1 :: RandomSearch Result (Maybe Result))
+        ["BOTH"]    ->
+          execSearch (RS.Config [(0,10),(0,31)] 100)
+                     (prog2 :: RandomSearch Result (Maybe Result))     
+
+
+    -- bitcount here needs to be enough for both params..
+    -- we should have a way to specify different bit counts
+    bitCount = 5 -- (2^32) (0..31)
+    bitclimb args = do
+      putStrLn "Bit climb search"
+      case args of
+        [] ->
+          execSearch (BS.Config bitCount 1 100 True)
+                     (prog1 :: BitClimbSearch Result (Maybe Result))
+        ["THREADS"] ->
+          execSearch (BS.Config bitCount 1 100 True)
+                     (prog1 :: BitClimbSearch Result (Maybe Result))
+
+        ["BOTH"]    ->
+          execSearch (BS.Config bitCount 2 100 True)
+                     (prog2 :: BitClimbSearch Result (Maybe Result))
+
+    popCount = 100
+    genetic args = do
+      putStrLn "Simple genetic algorithm"
+      case args of
+        [] ->
+          execSearch (GS.Config bitCount 1 popCount 100 0.2 3 True)
+                     (prog1 :: GeneticSearch Result (Maybe Result))
+        ["THREADS"] ->
+          execSearch (GS.Config bitCount 1 popCount 100 0.2 3 True)
+                     (prog1 :: GeneticSearch Result (Maybe Result))
+        ["BOTH"]    ->
+          execSearch (GS.Config bitCount 2 popCount 100 0.2 3 True)
+                     (prog2 :: GeneticSearch Result (Maybe Result))
+
+
+-----------------------------------------------------------------
+-- PROGS
+-----------------------------------------------------------------
+
+-- 2d search both params 
+prog2 :: (MonadIO (m Result), SearchMonad Result m)
+      => m Result (Maybe Result)
+prog2 = do
+
+  -- ctx <- liftIO $ initialize
+
+  w_param <- getParam 0
+  t_param <- getParam 1
+
+  let warp_th = 2^w_param
+      threads = 32 * (t_param + 1)
+
+  liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
+  liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
+
+  score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
+
+  liftIO $ putStrLn $ "Score = " ++ show score 
+  return $ Just $ Result ([warp_th,threads],score)         
+  
+prog1 = undefined 
+
+
+scoreIt kernel chunk_size n_chunks blocks threads warp_th = do
+  withCUDA $
+    do
+      kern <- capture (fromIntegral threads)
+              ( ((kernel (fromIntegral warp_th) (+)) . splitUp (fromIntegral chunk_size)) :: Pull EWord32 EWord32 -> Push Grid EWord32 EWord32)
+
+      (inputs :: V.Vector Word32) <- liftIO $ mkRandomVec (chunk_size * n_chunks)
+      
+      useVector inputs $ \input -> 
+        withVector n_chunks $ \output ->
+        do
+          fill input 1
+          syncAll
+          t0   <- liftIO $ getCurrentTime
+          output <== (blocks, kern) <> input
+          syncAll 
+          t1   <- liftIO $ getCurrentTime
+          res <- peekCUDAVector output
+          lift $ putStrLn $ show (take 10 res )
+
+          return $ realToFrac $ diffUTCTime t1 t0 
