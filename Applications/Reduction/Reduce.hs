@@ -328,13 +328,17 @@ prog2 = do
   let warp_th = 2^w_param
       threads = 32 * (t_param + 1)
 
-  liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
-  liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
+  if warp_th > 4096
+    then return Nothing 
+    else
+    do 
+      liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
+      liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
 
-  score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
+      score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
 
-  liftIO $ putStrLn $ "Score = " ++ show score 
-  return $ Just $ Result ([warp_th,threads],score)         
+      liftIO $ putStrLn $ "Score = " ++ show score 
+      return $ Just $ Result ([warp_th,threads],score)         
   
 prog1 = undefined 
 
