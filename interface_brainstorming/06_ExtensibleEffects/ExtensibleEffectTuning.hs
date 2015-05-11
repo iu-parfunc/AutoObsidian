@@ -54,6 +54,13 @@ runParamRdr _ bnds m  = loop m
            (\(GetParm f) -> loop (f (rng (symbolVal (Proxy::Proxy s)) bnds))))
   loop :: Free (Union (ParamRdr s :> r)) a -> Free (Union r) a
 
+  -- Here's a random policy for choices... need to thread through a
+  -- real RNG or another policy.  If we rely on an underlying effect,
+  -- however, then there needs to be a "run" for that effect.
+  --
+  -- Ideally, there needs to be an aggregation point for the
+  -- dimensions to be aggregated and the full hyperrectangle size
+  -- recorded.
   rng "a" (x,_) = x
   rng "b" (_,y) = y
   rng  _  (x,y) = x+y `quot` 2
