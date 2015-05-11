@@ -12,6 +12,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE CPP #-}
 
 -- | The idea with this prototype is to use a monad, but accumulate a
 -- type-level list of tuning decisions, indexed by unique names.
@@ -28,10 +29,6 @@ import GHC.TypeLits
 
 import Control.Eff
 import Data.Typeable
-
-----------------------------------------
--- ^ A concise proxy type
--- data P (a :: k) = P
 
 ----------------------------------------
 
@@ -61,16 +58,20 @@ runParamRdr _ bnds m  = loop m
   rng "b" (_,y) = y
   rng  _  (x,y) = x+y `quot` 2
 
+
+-- Hack for concision:
+#define SYM Proxy::Proxy
+
 -- Note: Signature is inferrable.
 example :: (Member (ParamRdr "a") r, Member (ParamRdr "b") r) => Eff r (Int,Int)
 example =
-  do x <- getParam (Proxy::Proxy "a")
-     y <- getParam (Proxy::Proxy "b")
+  do x <- getParam (SYM "a")
+     y <- getParam (SYM "b")
      return (x,y)
 
 
 test :: (Int,Int)
-test = run $ runParamRdr (Proxy::Proxy "a") (0,10) $
-             runParamRdr (Proxy::Proxy "b") (10,20) $
-             runParamRdr (Proxy::Proxy "c") (20,30) $ -- Ok to run with extra effects.
+test = run $ runParamRdr (SYM "a") (0,10) $
+             runParamRdr (SYM "b") (10,20) $
+             runParamRdr (SYM "c") (20,30) $ -- Ok to run with extra effects.
              example
