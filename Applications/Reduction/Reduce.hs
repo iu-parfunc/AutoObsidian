@@ -288,7 +288,7 @@ main = do
         [] ->
           execSearch (BS.Config bitCount 1 100 True)
                      (prog1 :: BitClimbSearch Result (Maybe Result))
-        ["THREADS"] ->
+        ["WARPTH"] ->
           execSearch (BS.Config bitCount 1 100 True)
                      (prog1 :: BitClimbSearch Result (Maybe Result))
 
@@ -303,7 +303,7 @@ main = do
         [] ->
           execSearch (GS.Config bitCount 1 popCount 100 0.2 3 True)
                      (prog1 :: GeneticSearch Result (Maybe Result))
-        ["THREADS"] ->
+        ["WARPTH"] ->
           execSearch (GS.Config bitCount 1 popCount 100 0.2 3 True)
                      (prog1 :: GeneticSearch Result (Maybe Result))
         ["BOTH"]    ->
