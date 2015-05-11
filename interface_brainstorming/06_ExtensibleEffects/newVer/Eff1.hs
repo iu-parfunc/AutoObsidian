@@ -20,7 +20,8 @@ module Eff1 where
 import Control.Monad
 import Control.Applicative
 import OpenUnion41
-import Data.FastTCQueue
+-- import Data.FastTCQueue -- old?
+import Data.TASequence.FastQueue hiding (tmap)
 
 import Data.IORef                       -- For demonstration of lifting
 import Data.Monoid                      -- For demos
@@ -37,7 +38,7 @@ newtype Arr r a b = Arr{unArr:: a -> Eff r b}
 -- of several effectful functions. The paremeter r describes the overall
 -- effect.
 -- The composition members are accumulated in a type-aligned queue
-type GenArr r a b = FastTCQueue (Arr r) a b
+type GenArr r a b = FastQueue (Arr r) a b
 
 -- The Eff monad (not a transformer!)
 -- It is a fairly standard coroutine monad
@@ -52,8 +53,8 @@ data Eff r a = Val a
 qApp :: b -> GenArr r b w -> Eff r w
 qApp x q =
    case tviewl q of
-   TEmptyL    -> Val x
-   Arr k :| t -> case k x of
+   TAEmptyL    -> Val x
+   k :< t -> case unArr k x of
      Val y -> qApp y t
      E u q -> E u (q >< t)
 
@@ -74,7 +75,7 @@ instance Applicative (Eff r) where
   Val f <*> E u q = E u (q |> Arr (Val . f))
   E u q <*> Val x = E u (q |> Arr (Val . ($ x)))
   E u q <*> m     = E u (q |> Arr (\f -> fmap f m))
-  
+
 instance Monad (Eff r) where
   {-# INLINE return #-}
   {-# INLINE (>>=) #-}
@@ -256,7 +257,7 @@ t4
   :: (Member (Reader Int) r, Member (Reader Float) r) =>
      () -> Eff r Float
 -}
-t4 = liftM2 (+) (local (+ (10::Int)) t2) 
+t4 = liftM2 (+) (local (+ (10::Int)) t2)
                 (local (+ (30::Float)) t2)
 
 t4rr = (106.0 ==) $ run $ runReader (runReader t4 (10::Int)) (20::Float)
@@ -372,7 +373,7 @@ t_alttry =
      (return 1 `add` throwError "bummer1") `alttry`
      (return 1 `add` throwError "bummer2")
      ]
-  
+
 
 -- ------------------------------------------------------------------------
 -- Non-determinism (choice)
@@ -408,7 +409,7 @@ makeChoice =
  handle []  _ = return []
  handle [x] k = k x
  handle lst k = fmap concat $ mapM k lst
- 
+
 exc1 :: Member Choose r => Eff r Int
 exc1 = return 1 `add` choose [1,2]
 
@@ -429,11 +430,11 @@ exc11r = ([2,3] ==) $ run exc11
 ifte :: forall r a b.
         Member Choose r => Eff r a -> (a -> Eff r b) -> Eff r b -> Eff r b
 ifte t th el = loop [] (admin t)
- where 
+ where
  loop [] (Val x)  = th x
  -- add all other latent choices of t to th x
  -- this is like reflection of t
- loop jq (Val x)  = choose ((th x) : map (\t -> reflect t >>= th) jq) >>= id 
+ loop jq (Val x)  = choose ((th x) : map (\t -> reflect t >>= th) jq) >>= id
  loop jq (E u)    = interpose u (loop jq) (\(Choose lst k) -> handle jq lst k)
  -- Need the signature since local bindings aren't polymorphic any more
  handle :: [VE a r] -> [t] -> (t -> VE a r) -> Eff r b
@@ -506,7 +507,7 @@ ex2r_1 = (Left (TooBig 11) ==) $
 -- We can use this request both for mutating and getting the state.
 -- But see below for a better design!
 data State s v where
-  State :: (s->s) -> State s s 
+  State :: (s->s) -> State s s
 
 -- Use Reader to get the state. So we decompose State into Reader
 -- and Mutator!
@@ -542,7 +543,7 @@ runState m s =
 -- Examples
 
 ts1 :: Member (State Int) r => Eff r Int
-ts1 = do 
+ts1 = do
   put (10 ::Int)
   x <- get
   return (x::Int)
@@ -551,12 +552,12 @@ ts1r = ((10,10) ==) $ run (runState ts1 (0::Int))
 
 
 ts2 :: Member (State Int) r => Eff r Int
-ts2 = do 
+ts2 = do
   put (10::Int)
   x <- get
   put (20::Int)
   y <- get
-  return (x+y) 
+  return (x+y)
 
 ts2r = ((30,20) ==) $ run (runState ts2 (0::Int))
 
@@ -581,7 +582,7 @@ runStateR m s = loop s m
 -- requests.
 
 ts11 :: (Member (Reader Int) r, Member (State Int) r) => Eff r Int
-ts11 = do 
+ts11 = do
   put (10 ::Int)
   x <- ask
   return (x::Int)
@@ -590,12 +591,12 @@ ts11r = ((10,10) ==) $ run (runStateR ts1 (0::Int))
 
 
 ts21 :: (Member (Reader Int) r, Member (State Int) r) => Eff r Int
-ts21 = do 
+ts21 = do
   put (10::Int)
   x <- ask
   put (20::Int)
   y <- ask
-  return (x+y) 
+  return (x+y)
 
 ts21r = ((30,20) ==) $ run (runStateR ts2 (0::Int))
 
@@ -647,7 +648,7 @@ See EncapsMTL.hs for the complete code.
 -}
 
 -- There are three possible implementations
--- The first one uses State Fresh where 
+-- The first one uses State Fresh where
 --    newtype Fresh = Fresh Int
 -- We get the `private' effect layer (State Fresh) that does not interfere
 -- with with other layers.
@@ -815,7 +816,7 @@ tMd' = runLift $ runReader (mapMdebug' f [1..5]) (10::Int)
 -- Co-routines
 -- The interface is intentionally chosen to be the same as in transf.hs
 
--- The yield request: reporting the value of type a and suspending 
+-- The yield request: reporting the value of type a and suspending
 -- the coroutine. Resuming with the value of type b
 data Yield a b v = Yield a (b -> v)
     deriving (Typeable, Functor)
@@ -833,7 +834,7 @@ runC :: (Typeable a, Typeable b) =>
         Eff (Yield a b :> r) w -> Eff r (Y r a b)
 runC m = loop (admin m) where
  loop (Val x) = return Done
- loop (E u)   = handle_relay u loop $ 
+ loop (E u)   = handle_relay u loop $
                  \(Yield x k) -> return (Y x (loop . k))
 
 
@@ -1061,7 +1062,7 @@ Done
 -- In other words, cutfalse is the left zero of both bind and mplus.
 --
 -- Hinze also introduces the operation call :: m a -> m a that
--- delimits the effect of cut: call m executes m. If the cut is 
+-- delimits the effect of cut: call m executes m. If the cut is
 -- invoked in m, it discards only the choices made since m was called.
 -- Hinze postulates the axioms of call:
 --
@@ -1074,7 +1075,7 @@ Done
 -- he says.
 
 -- Hinze noted a problem with the `mechanical' derivation of backtracing
--- monad transformer with cut: no axiom specifying the interaction of 
+-- monad transformer with cut: no axiom specifying the interaction of
 -- call with bind; no way to simplify nested invocations of call.
 
 -- We use exceptions for cutfalse
@@ -1112,16 +1113,16 @@ call m = loop [] (admin m) where
 
 -- The signature is inferred
 tcut1 :: (Member Choose r, Member (Exc CutFalse) r) => Eff r Int
-tcut1 = (return (1::Int) `mplus'` return 2) `mplus'` 
+tcut1 = (return (1::Int) `mplus'` return 2) `mplus'`
          ((cutfalse `mplus'` return 4) `mplus'`
           return 5)
 
 tcut1r = run . makeChoice $ call tcut1
 -- [1,2]
 
-tcut2 = return (1::Int) `mplus'` 
-         call (return 2 `mplus'` (cutfalse `mplus'` return 3) `mplus'` 
-               return 4) 
+tcut2 = return (1::Int) `mplus'`
+         call (return 2 `mplus'` (cutfalse `mplus'` return 3) `mplus'`
+               return 4)
        `mplus'` return 5
 
 -- Here we see nested call. It poses no problems...
