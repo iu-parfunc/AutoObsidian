@@ -37,18 +37,28 @@ peek (FLIFO _ (x:_)) = Just x
 data ResultLog result =
   ResultLog { resultLogBest :: FLIFO result
             , resultLogAll  :: Maybe (FLIFO result)
+            , resultLogBestOverTime :: [(Int,result)]
             }
 
 
+
+-- | add a result to the log.
+--   Takes a resultlog, a result and an iteration no. 
 addResult :: Ord result
-          => ResultLog result -> result -> ResultLog result
-addResult resLog res =
+          => ResultLog result -> result -> Int ->  ResultLog result
+addResult resLog res iter =
   resLog { resultLogBest = push (resultLogBest resLog) bestSoFar'
          , resultLogAll  =
            case resultLogAll resLog of
              Nothing -> Nothing
-             Just lifo -> Just $ push lifo res }  
-
+             Just lifo -> Just $ push lifo res
+         , resultLogBestOverTime =
+             if (res < bestSoFar')
+             then (error "NOOO") 
+             else (iter,bestSoFar'):resultLogBestOverTime resLog}  
+  -- LOOK FOR A BUG HERE:
+  --  THe timeseries looks strange it should
+  --  be decreasing but there are steps that break that! 
   where
     bestSoFar = peek (resultLogBest resLog)
     bestSoFar' =
@@ -72,3 +82,7 @@ resultCSV res = ( unlines $ map toCSVRow (flifoData bestRes)
   where
     bestRes = resultLogBest res
     allRes  = resultLogAll  res 
+
+
+
+
