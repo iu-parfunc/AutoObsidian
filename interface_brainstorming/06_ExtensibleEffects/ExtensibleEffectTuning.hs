@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -9,6 +10,8 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE PolyKinds #-}
 
 -- | The idea with this prototype is to use a monad, but accumulate a
 -- type-level list of tuning decisions, indexed by unique names.
@@ -34,36 +37,74 @@ import Control.Monad.ST
 
 -- import Data.Proxy
 -- import System.Random.MWC
--- import GHC.TypeLits
+import GHC.TypeLits
 
 import Control.Eff
 import Data.Typeable
 
 ----------------------------------------
+-- ^ A concise proxy type
+-- data P (a :: k) = P
 
-data RandomNumEff a = GetParm Int Int (Int -> a)
-  deriving (Typeable, Functor)
+----------------------------------------
 
-getParam :: (Member RandomNumEff r) => Int -> Int -> Eff r Int
-getParam n m = send (inj (GetParm n m id))
+-- data RandomNumEff (s :: Symbol) a =
+data RandomNumEff s a =
+     KnownSymbol s =>
+     GetParm { name  :: Proxy s
+             , bnds  :: (Int,Int) -- ^ inclusive
+             , runit :: (Int -> a)
+             }
+  deriving (Typeable)
 
-runRandomNumEff :: Eff (RandomNumEff :> r) w -> ((Int,Int) -> Int) -> Eff r w
-runRandomNumEff m rng = loop m
+instance KnownSymbol s => Functor (RandomNumEff s) where
+  fmap f (GetParm n b g) = GetParm n b (f . g)
+
+getParam :: forall s r . (KnownSymbol s, Typeable s, Member (RandomNumEff s) r) =>
+            Proxy s -> Int -> Int -> Eff r Int
+getParam s n m = send (inj (GetParm s (n,m) id :: RandomNumEff s Int))
+
+runRandomNumEff :: (Typeable s) =>
+                   Proxy s ->
+                   (String -> (Int,Int) -> Int) ->
+                    Eff (RandomNumEff s :> r) w ->  Eff r w
+runRandomNumEff _ rng m  = loop m
   where
   loop = freeMap return
          (\u -> handleRelay u loop
-           (\(GetParm x y f) -> loop (f (rng (x,y)))))
-
+           (\(GetParm k b f) -> loop (f (rng (symbolVal k) b))))
   -- loop :: Free (Union (RandomNumEff :> r)) a -> Free (Union r) a
 
-example :: (Member RandomNumEff r) => Eff r (Int,Int)
+example :: (Member (RandomNumEff "a") r,
+            Member (RandomNumEff "b") r) =>
+           Eff r (Int,Int)
 example =
-  do x <- getParam 0 10
-     y <- getParam 10 20
+  do x <- getParam (Proxy::Proxy "a") 0 10
+     y <- getParam (Proxy::Proxy "b") 10 20
      return (x,y)
 
+{-
+
+data A
+data B
+
+example2 :: (Member (RandomNumEff A) r,
+             Member (RandomNumEff B) r) =>
+            Eff r (Int,Int)
+example2 =
+  do x <- getParam (Proxy::Proxy A) 0 10
+     y <- getParam (Proxy::Proxy ) 10 20
+     return (x,y)
+-}
+
 test :: (Int,Int)
-test = run $ runRandomNumEff example fst
+test = run $ runRandomNumEff (Proxy::Proxy "a") f $
+             runRandomNumEff (Proxy::Proxy "b") f $
+             example
+ where
+  f "a" (x,_) = x
+  f "b" (_,y) = y
+
 
 
 

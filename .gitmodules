@@ -8,3 +8,6 @@
 	path = interface_brainstorming/02_monad-tune
 #	url = https://github.com/vollmerm/monad-tune
         url = git@github.com:vollmerm/monad-tune.git
+[submodule "interface_brainstorming/06_ExtensibleEffects/extensible-effects"]
+	path = interface_brainstorming/06_ExtensibleEffects/extensible-effects
+	url = git@github.com:suhailshergill/extensible-effects.git
