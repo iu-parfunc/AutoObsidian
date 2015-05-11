@@ -19,18 +19,22 @@ for strat in $STRATEGIES; do
 
     echo "***Starting $strat search strategy***"
     
+    echo "***SEARCH MANDELBROT***"
     # perform mandel 
     $EXECDIR/Mandel2 $strat THREADS
     $EXECDIR/Mandel2 $strat BOTH 
 
+    echo "***SEARCH HISTOGRAM***"
     # perform histogram 
     $EXECDIR/Histogram $strat THREADS 
     $EXECDIR/Histogram $strat BOTH     #threads & blocks 
     
+    echo "***SEARCH REDUCTION***"
     # perform reduction 
     $EXECDIR/Reduction $strat WARPTH
     $EXECDIR/Reduction $strat BOTH 
 
+    echo "***SEARCH GRAPH BFS***"
     #perform Graph 
     $EXECDIR/Graph $strat 1 # Just KERNEL_TH  
     $EXECDIR/Graph $strat 2 # KERNEL_TH and SMALL_VERTEX 
