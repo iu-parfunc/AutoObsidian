@@ -51,20 +51,19 @@ import Data.Typeable
 -- data RandomNumEff (s :: Symbol) a =
 data RandomNumEff s a =
      KnownSymbol s =>
-     GetParm { name  :: Proxy s
-             , bnds  :: (Int,Int) -- ^ inclusive
+     GetParm { bnds  :: (Int,Int) -- ^ inclusive
              , runit :: (Int -> a)
              }
   deriving (Typeable)
 
 instance KnownSymbol s => Functor (RandomNumEff s) where
-  fmap f (GetParm n b g) = GetParm n b (f . g)
+  fmap f (GetParm b g) = GetParm b (f . g)
 
 getParam :: forall s r . (KnownSymbol s, Typeable s, Member (RandomNumEff s) r) =>
             Proxy s -> Int -> Int -> Eff r Int
-getParam s n m = send (inj (GetParm s (n,m) id :: RandomNumEff s Int))
+getParam _ n m = send (inj (GetParm (n,m) id :: RandomNumEff s Int))
 
-runRandomNumEff :: (Typeable s) =>
+runRandomNumEff :: forall s r w . (Typeable s) =>
                    Proxy s ->
                    (String -> (Int,Int) -> Int) ->
                     Eff (RandomNumEff s :> r) w ->  Eff r w
@@ -72,8 +71,8 @@ runRandomNumEff _ rng m  = loop m
   where
   loop = freeMap return
          (\u -> handleRelay u loop
-           (\(GetParm k b f) -> loop (f (rng (symbolVal k) b))))
-  -- loop :: Free (Union (RandomNumEff :> r)) a -> Free (Union r) a
+           (\(GetParm b f) -> loop (f (rng (symbolVal (Proxy::Proxy s)) b))))
+  loop :: Free (Union (RandomNumEff s :> r)) a -> Free (Union r) a
 
 example :: (Member (RandomNumEff "a") r,
             Member (RandomNumEff "b") r) =>
