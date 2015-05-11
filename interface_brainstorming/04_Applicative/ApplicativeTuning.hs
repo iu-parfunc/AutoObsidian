@@ -6,6 +6,10 @@
 -- Using Applicative means that we can ascertain exactly what tunables
 -- are used *before* running the computation.
 
+-- TODO: It would probably be good to have user-provided names
+-- (Strings) for each call to getParam.  Naturally people associate
+-- names with the different things they are trying to tune.
+
 module ApplicativeTuning
  (
    -- * The abstract datatype for tunable computations
