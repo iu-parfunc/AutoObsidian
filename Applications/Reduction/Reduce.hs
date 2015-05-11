@@ -288,7 +288,7 @@ main = do
         [] ->
           execSearch (BS.Config bitCount 1 100 True)
                      (prog1 :: BitClimbSearch Result (Maybe Result))
-        ["THREADS"] ->
+        ["WARPTH"] ->
           execSearch (BS.Config bitCount 1 100 True)
                      (prog1 :: BitClimbSearch Result (Maybe Result))
 
@@ -303,7 +303,7 @@ main = do
         [] ->
           execSearch (GS.Config bitCount 1 popCount 100 0.2 3 True)
                      (prog1 :: GeneticSearch Result (Maybe Result))
-        ["THREADS"] ->
+        ["WARPTH"] ->
           execSearch (GS.Config bitCount 1 popCount 100 0.2 3 True)
                      (prog1 :: GeneticSearch Result (Maybe Result))
         ["BOTH"]    ->
@@ -328,13 +328,17 @@ prog2 = do
   let warp_th = 2^w_param
       threads = 32 * (t_param + 1)
 
-  liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
-  liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
+  if warp_th > 4096
+    then return Nothing 
+    else
+    do 
+      liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
+      liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
 
-  score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
+      score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
 
-  liftIO $ putStrLn $ "Score = " ++ show score 
-  return $ Just $ Result ([warp_th,threads],score)         
+      liftIO $ putStrLn $ "Score = " ++ show score 
+      return $ Just $ Result ([warp_th,threads],score)         
   
 prog1 = undefined 
 

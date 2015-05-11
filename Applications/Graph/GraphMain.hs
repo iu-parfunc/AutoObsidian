@@ -71,7 +71,8 @@ main = do
   res <- case args of
     ("RANDOM":_) -> random (tail args) 
     ("BITCLIMB":_) -> bitclimb (tail args) 
-    ("EXHAUSTIVE":_) -> exhaustive (tail args) 
+    ("EXHAUSTIVE":_) -> exhaustive (tail args)
+    ("SGA":_) -> error "NOT IMPLEMENTED"
     _ -> exhaustive [] 
 
   putStrLn "Best param"

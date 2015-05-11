@@ -75,6 +75,7 @@ main = do
     ("RANDOM":_) -> random inputs (tail args)
     ("BITCLIMB":_) -> bitclimb inputs (tail args)
     ("EXHAUSTIVE":_) -> exhaustive inputs (tail args)
+    ("SGA":_) -> error "NOT IMPLEMENTED" 
     _ -> exhaustive inputs []
     
   let filename = argsToFileName args
