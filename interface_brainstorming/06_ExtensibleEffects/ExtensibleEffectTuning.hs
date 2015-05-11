@@ -61,6 +61,8 @@ runParamRdr _ bnds m  = loop m
   -- Ideally, there needs to be an aggregation point for the
   -- dimensions to be aggregated and the full hyperrectangle size
   -- recorded.
+  --
+  -- Maybe there could be an alternate run that takes an HList of params.
   rng "a" (x,_) = x
   rng "b" (_,y) = y
   rng  _  (x,y) = x+y `quot` 2
