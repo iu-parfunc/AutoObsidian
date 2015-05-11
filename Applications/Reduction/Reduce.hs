@@ -339,8 +339,28 @@ prog2 = do
 
       liftIO $ putStrLn $ "Score = " ++ show score 
       return $ Just $ Result ([warp_th,threads],score)         
+
   
-prog1 = undefined 
+prog1 :: (MonadIO (m Result), SearchMonad Result m)
+      => m Result (Maybe Result)
+prog1 = do 
+  w_param <- getParam 0
+  t_param <- getParam 1
+
+  let warp_th = 2^w_param
+      threads = 128 -- 32 * (t_param + 1)
+
+  if warp_th > 4096
+    then return Nothing 
+    else
+    do 
+      liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
+      liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
+
+      score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
+
+      liftIO $ putStrLn $ "Score = " ++ show score 
+      return $ Just $ Result ([warp_th],score)         
 
 
 scoreIt kernel chunk_size n_chunks blocks threads warp_th = do
