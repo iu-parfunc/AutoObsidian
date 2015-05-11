@@ -17,19 +17,6 @@
 -- type-level list of tuning decisions, indexed by unique names.
 
 module ExtensibleEffectTuning
- -- (
- --   -- * The abstract datatype for tunable computations
- --   Tune
- -- , allParams
- -- , getParam
- --   -- * Running and searching
- -- , tune
- -- , tunePure
- -- , runMin
- --   -- * Temporary
- -- , test
- --
- -- )
  where
 
 import Control.Applicative
@@ -48,65 +35,42 @@ import Data.Typeable
 
 ----------------------------------------
 
--- data RandomNumEff (s :: Symbol) a =
-data RandomNumEff s a =
-     KnownSymbol s =>
-     GetParm { bnds  :: (Int,Int) -- ^ inclusive
-             , runit :: (Int -> a)
-             }
+-- ^ This is nothing but a reader effect for an integral parameter
+-- which is identified by the type-level Symbol.
+data ParamRdr s a = KnownSymbol s => GetParm (Int -> a)
   deriving (Typeable)
 
-instance KnownSymbol s => Functor (RandomNumEff s) where
-  fmap f (GetParm b g) = GetParm b (f . g)
+instance KnownSymbol s => Functor (ParamRdr s) where
+  fmap f (GetParm g) = GetParm (f . g)
 
-getParam :: forall s r . (KnownSymbol s, Typeable s, Member (RandomNumEff s) r) =>
-            Proxy s -> Int -> Int -> Eff r Int
-getParam _ n m = send (inj (GetParm (n,m) id :: RandomNumEff s Int))
+getParam :: forall s r . (KnownSymbol s, Typeable s, Member (ParamRdr s) r) =>
+            Proxy s -> Eff r Int
+getParam _ = send (inj (GetParm id :: ParamRdr s Int))
 
-runRandomNumEff :: forall s r w . (Typeable s) =>
-                   Proxy s ->
-                   (String -> (Int,Int) -> Int) ->
-                    Eff (RandomNumEff s :> r) w ->  Eff r w
-runRandomNumEff _ rng m  = loop m
+runParamRdr :: forall s r w . (Typeable s) =>
+               Proxy s -> (Int,Int) ->
+               Eff (ParamRdr s :> r) w ->  Eff r w
+runParamRdr _ bnds m  = loop m
   where
   loop = freeMap return
          (\u -> handleRelay u loop
-           (\(GetParm b f) -> loop (f (rng (symbolVal (Proxy::Proxy s)) b))))
-  loop :: Free (Union (RandomNumEff s :> r)) a -> Free (Union r) a
+           (\(GetParm f) -> loop (f (rng (symbolVal (Proxy::Proxy s)) bnds))))
+  loop :: Free (Union (ParamRdr s :> r)) a -> Free (Union r) a
 
-example :: (Member (RandomNumEff "a") r,
-            Member (RandomNumEff "b") r) =>
-           Eff r (Int,Int)
+  rng "a" (x,_) = x
+  rng "b" (_,y) = y
+  rng  _  (x,y) = x+y `quot` 2
+
+-- Note: Signature is inferrable.
+example :: (Member (ParamRdr "a") r, Member (ParamRdr "b") r) => Eff r (Int,Int)
 example =
-  do x <- getParam (Proxy::Proxy "a") 0 10
-     y <- getParam (Proxy::Proxy "b") 10 20
+  do x <- getParam (Proxy::Proxy "a")
+     y <- getParam (Proxy::Proxy "b")
      return (x,y)
 
-{-
-
-data A
-data B
-
-example2 :: (Member (RandomNumEff A) r,
-             Member (RandomNumEff B) r) =>
-            Eff r (Int,Int)
-example2 =
-  do x <- getParam (Proxy::Proxy A) 0 10
-     y <- getParam (Proxy::Proxy ) 10 20
-     return (x,y)
--}
 
 test :: (Int,Int)
-test = run $ runRandomNumEff (Proxy::Proxy "a") f $
-             runRandomNumEff (Proxy::Proxy "b") f $
+test = run $ runParamRdr (Proxy::Proxy "a") (0,10) $
+             runParamRdr (Proxy::Proxy "b") (10,20) $
+             runParamRdr (Proxy::Proxy "c") (20,30) $ -- Ok to run with extra effects.
              example
- where
-  f "a" (x,_) = x
-  f "b" (_,y) = y
-
-
-
-
---------------------------------------------------------------------------------
-
--- runFoo = handle_relay return (\FooChoice k -> getParam 10 20 >>= unArr k)
