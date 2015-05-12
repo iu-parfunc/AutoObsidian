@@ -3,5 +3,5 @@
 
 cabal sandbox init 
 
-cabal install ./Obsidian/ .
+cabal install ./Obsidian/ . ./Applications/Graph/ ./Applications/Mandel/  ./Applications/Histogram ./Applications/Reduction/ ./Applications/ReductionSeq/ 
 
