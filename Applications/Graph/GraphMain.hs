@@ -26,6 +26,7 @@ import Auto.SearchMonad
 import Auto.RandomSearch as RS
 import Auto.ExhaustiveSearch as ES
 import Auto.BitClimbSearch as BS
+import Auto.GeneticSearch as GS
 
 -- timing
 import Data.Time.Clock
@@ -100,41 +101,41 @@ main = do
       putStrLn "Exhaustive search"
       case args of
         [] -> 
-          execSearch (ES.Config [[x*32 | x <- [64..128]]])
-                     (prog :: ExhaustiveSearch Result (Maybe Result))
+          ES.runSearch (ES.Config [[x*32 | x <- [64..128]]])
+                       (prog :: ExhaustiveSearch Result (Maybe Result))
         ["1"] -> 
-          execSearch (ES.Config [[x*32 | x <- [64..128]]])
-                     (prog :: ExhaustiveSearch Result (Maybe Result))
+          ES.runSearch (ES.Config [[x*32 | x <- [64..128]]])
+                       (prog :: ExhaustiveSearch Result (Maybe Result))
         ["2"] ->
-          execSearch (ES.Config [ [x*64 | x <- [1..32]]
-                                , [x*2 | x <- [0..32]]])
+          ES.runSearch (ES.Config [ [x*64 | x <- [1..32]]
+                                  , [x*2 | x <- [0..32]]])
              (prog2Param :: ExhaustiveSearch Result (Maybe Result))
   
     random args = do
       putStrLn "Random search"
       case args of
         [] -> 
-          execSearch (RS.Config [(1,1024)] 1000)
-                     (prog :: RandomSearch Result (Maybe Result))
+          RS.runSearch (RS.Config [(1,1024)] 1000)
+                       (prog :: RandomSearch Result (Maybe Result))
         ["1"] -> 
-          execSearch (RS.Config [(1,1024)] 1000)
-                     (prog :: RandomSearch Result (Maybe Result))
+          RS.runSearch (RS.Config [(1,1024)] 1000)
+                       (prog :: RandomSearch Result (Maybe Result))
         ["2"] ->
-          execSearch (RS.Config [(1,2048),(1,64)] 1000)
-                     (prog2Param :: RandomSearch Result (Maybe Result))
+          RS.runSearch (RS.Config [(1,2048),(1,64)] 1000)
+                       (prog2Param :: RandomSearch Result (Maybe Result))
           
     bitclimb args = do 
       putStrLn "Bit climb search"
       case args of
         [] -> 
-          execSearch (BS.Config 10 1 100 True)
-                     (prog :: BitClimbSearch Result (Maybe Result)) 
+          BS.runSearch (BS.Config 10 1 100 True)
+                       (prog :: BitClimbSearch Result (Maybe Result)) 
         ["1"] ->
-          execSearch (BS.Config 10 1 100 True)
-                     (prog :: BitClimbSearch Result (Maybe Result))
+          BS.runSearch (BS.Config 10 1 100 True)
+                       (prog :: BitClimbSearch Result (Maybe Result))
         ["2"] ->
-          execSearch (BS.Config 10 2 100 True)
-                     (prog2Param :: BitClimbSearch Result (Maybe Result))
+          BS.runSearch (BS.Config 10 2 100 True)
+                       (prog2Param :: BitClimbSearch Result (Maybe Result))
              
   
                      

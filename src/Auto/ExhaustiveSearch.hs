@@ -19,7 +19,6 @@ Implementation of exhaustive search instance for the SearchMonad class.
 module Auto.ExhaustiveSearch where
 
 import Control.Monad.State
-import Control.Monad.Reader
 import Control.Applicative
 
 
@@ -34,20 +33,17 @@ data Config = Config { paramLists :: [[Int]] }
 
 
 newtype ExhaustiveSearch result a =
-  ExhaustiveSearch (ReaderT Config (StateT ([Int]
-                                           , ResultLog result) IO) a)
+  ExhaustiveSearch (StateT ([Int]
+                           , ResultLog result) IO a)
  deriving ( Monad
           , MonadIO
           , MonadState ([Int], ResultLog result)
-          , MonadReader Config
+--           , MonadReader Config
           , Functor
           , Applicative)
 
 
 instance Ord result => SearchMonad result ExhaustiveSearch where
-  type SearchConfig ExhaustiveSearch = Config
-  type SearchAux    ExhaustiveSearch = [Int] 
-
   getParam i = do
     (params,_) <- get
 
@@ -57,32 +53,32 @@ instance Ord result => SearchMonad result ExhaustiveSearch where
       else return (params !! i)
 
 
+-- | Run exhaustive search 
+runSearch :: Ord result => Config
+          -> ExhaustiveSearch result (Maybe result)
+          -> IO (ResultLog result)
+runSearch cfg (ExhaustiveSearch m) = do
+  let m' combos = forM_ (zip combos [1..]) $ \(params,iter) ->
+        do
+          (old_params,rlog) <- get
+          put (params,rlog)
 
-  runSearch cfg (ExhaustiveSearch m) = do
+          m_res <- m
 
+          let rlog' =
+                case m_res of
+                  Nothing -> rlog
+                  Just r  -> addResult rlog r iter 
 
-    let m' combos = forM_ (zip combos [1..]) $ \(params,iter) ->
-          do
-            (old_params,rlog) <- get
-            put (params,rlog)
+          put (old_params, rlog')
 
-            m_res <- m
+  let m'' = do let combos = sequence $ paramLists cfg
+               m' combos
 
-            let rlog' =
-                  case m_res of
-                    Nothing -> rlog
-                    Just r  -> addResult rlog r iter 
-
-            put (old_params, rlog')
-
-    let m'' = do cfg' <- ask
-                 let combos = sequence $ paramLists cfg'
-                 m' combos
-
-    (_a,s) <- runStateT (runReaderT m'' cfg)
-                        ( []
-                        , ResultLog (mkFLIFO $ Just 10)
-                                    (Just $ mkFLIFO Nothing)
-                                    [])
-    return s -- snd s -- $ peek (resultLogBest (snd s))
+  (_a,s) <- runStateT m''
+                      ( []
+                      , ResultLog (mkFLIFO $ Just 10)
+                                  (Just $ mkFLIFO Nothing)
+                                  [])
+  return $ snd s -- $ peek (resultLogBest (snd s))
 

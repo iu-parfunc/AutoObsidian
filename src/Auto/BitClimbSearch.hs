@@ -72,9 +72,6 @@ newtype BitClimbSearch result a =
            )
 
 instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
-  type SearchConfig BitClimbSearch = Config
-  type SearchAux    BitClimbSearch =
-    (StdGen, MultiBitString) -- problem getting the Maybe result out here
 
   -- | Returns the nth param, which is represented by the nth element
   --   in the bitstring list in the search state.
@@ -82,53 +79,62 @@ instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
     (_,bstr,_,_) <- get
     return $ bitStringToNum $ nthParam bstr i
 
-  -- | Run the hill climbing search.
-  runSearch cfg (BitClimbSearch m) = do
-    stdGen <- newStdGen
+-- | Run the hill climbing search.
+runSearch :: (Show result, Ord result) => Config
+          -> BitClimbSearch result (Maybe result)
+          -> IO (ResultLog result)
+runSearch cfg (BitClimbSearch m) = do
+  stdGen <- newStdGen
 
-    let (g', g'') = split stdGen
-        init = makeIndividual (numBits cfg) (numParams cfg) g'
+  let (g', g'') = split stdGen
+      init = makeIndividual (numBits cfg) (numParams cfg) g'
 
-        -- Compare two results
-        resComp p1@(Just res1, _) p2@(Just res2, _) =
-          if res1 <= res2 then p1 else p2
-        resComp a@(Just _, _) (Nothing,_) = a
-        resComp (Nothing,_) a = a
+      -- Compare two results
+      resComp p1@(Just res1, _) p2@(Just res2, _) =
+        if res1 <= res2 then p1 else p2
+      resComp a@(Just _, _) (Nothing,_) = a
+      resComp (Nothing,_) a = a
 
         -- Try a mutation and keep it if it's better than the current result
-        testBit b p iter = do
-          (g,bstr,res,rlog) <- get
-          let bstrNew = flipBitAt b p bstr
-          put (g,bstrNew,Nothing,rlog)
-          resNew <- m
-          let (resBest,bstrBest) = resComp (resNew,bstrNew) (res,bstr)
-          let rlog' =
-                -- Only record in log if we move to the new solution
-                case resNew of
-                  Nothing -> rlog
-                  Just r  -> if (resBest == resNew)
-                             then addResult rlog r iter
-                             else rlog
-          put (g,bstrBest,resBest,rlog')
-          if (verbose cfg)
-            then do
-            liftIO $ putStrLn $ "Current best: " ++ (show resBest)
-            liftIO $ putStrLn $ "Moving state: " ++ (show $ resBest == resNew)
-            return ()
-            else
-            return ()
-
-        m' = forM_ [1..(numIters cfg)] $ \iter -> do
-          (g,bstr,res,rlog) <- get
-          let (r1,g1)  = randomR (0,(numBits cfg)-1) g
-              (r2,g2) = randomR (0,(numParams cfg)-1) g1
-          put (g2,bstr,res,rlog)
-          testBit r1 r2 iter
+      testBit b p iter = do
+        (g,bstr,res,rlog) <- get
+        let bstrNew = flipBitAt b p bstr
+        put (g,bstrNew,Nothing,rlog)
+        resNew <- m
+        let (resBest,bstrBest) = resComp (resNew,bstrNew) (res,bstr)
+        let rlog' =
+              -- Only record in log if we move to the new solution
+              case resNew of
+                Nothing -> rlog
+                Just r  -> if (resBest == resNew)
+                           then addResult rlog r iter
+                           else rlog
+        put (g,bstrBest,resBest,rlog')
+        if (verbose cfg)
+          then do
+          liftIO $ putStrLn $ "Current best: " ++ (show resBest)
+          liftIO $ putStrLn $ "Moving state: " ++ (show $ resBest == resNew)
+          return ()
+          else
           return ()
 
-    (_,(stdg,a,_,rlog)) <- runStateT (runReaderT m' cfg)
-                        (g'', init, Nothing,
-                         ResultLog (mkFLIFO $ Just 10)
-                                   (Just $ mkFLIFO Nothing)
-                                   [] )
-    return $ ((stdg,a),rlog) -- peek $ resultLogBest rlog
+      m' = forM_ [1..(numIters cfg)] $ \iter -> do
+        (g,bstr,res,rlog) <- get
+        let (r1,g1)  = randomR (0,(numBits cfg)-1) g
+            (r2,g2) = randomR (0,(numParams cfg)-1) g1
+        put (g2,bstr,res,rlog)
+        testBit r1 r2 iter
+        return ()
+
+  -- (_,(stdg,a,_,rlog)) <- runStateT (runReaderT m' cfg)
+  --                     (g'', init, Nothing,
+  --                      ResultLog (mkFLIFO $ Just 10)
+  --                                (Just $ mkFLIFO Nothing)
+  --                                [] )
+  (_,(_,_,_,rlog)) <- runStateT (runReaderT m' cfg)
+                      (g'', init, Nothing,
+                       ResultLog (mkFLIFO $ Just 10)
+                                 (Just $ mkFLIFO Nothing)
+                                 [] )
+
+  return $ rlog -- ((stdg,a),rlog) -- peek $ resultLogBest rlog

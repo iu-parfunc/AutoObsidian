@@ -47,8 +47,6 @@ newtype RandomSearch result a =
           , Applicative)
 
 instance Ord result => SearchMonad result RandomSearch where
-  type SearchConfig RandomSearch = Config
-  type SearchAux    RandomSearch = StdGen
   getParam i = do
     cfg <- ask
     --- Here ---
@@ -60,8 +58,10 @@ instance Ord result => SearchMonad result RandomSearch where
     --- To here -- can be replaced with a modify
     return a
 
-
-  runSearch cfg (RandomSearch m) = do
+runSearch :: Ord result => Config
+          -> RandomSearch result (Maybe result)
+          -> IO (ResultLog result)
+runSearch cfg (RandomSearch m) = do
     stdGen <- newStdGen -- splits some "global" generator
   
   
@@ -86,4 +86,4 @@ instance Ord result => SearchMonad result RandomSearch where
                        , ResultLog (mkFLIFO $ Just 10)
                                    (Just $ mkFLIFO Nothing)
                                    [] )
-    return s --  $ snd s -- $ peek (resultLogBest (snd s))
+    return $ snd s -- $ peek (resultLogBest (snd s))

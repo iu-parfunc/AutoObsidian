@@ -29,6 +29,7 @@ import Auto.SearchMonad
 import Auto.RandomSearch as RS
 import Auto.ExhaustiveSearch as ES
 import Auto.BitClimbSearch as BS
+import Auto.GeneticSearch as GS 
 
 -- timing
 import Data.Time.Clock
@@ -98,13 +99,13 @@ main = do
       putStrLn "Exhaustive search"
       case args of
         [] -> 
-          execSearch (ES.Config [[x*32 | x <- [1..32]]])
+          ES.runSearch (ES.Config [[x*32 | x <- [1..32]]])
              (prog inputs :: ExhaustiveSearch Result (Maybe Result))
         ["THREADS"] -> 
-          execSearch (ES.Config [[x*32 | x <- [1..32]]])
+          ES.runSearch (ES.Config [[x*32 | x <- [1..32]]])
              (prog inputs :: ExhaustiveSearch Result (Maybe Result))
         ["BOTH"] ->
-          execSearch (ES.Config [ [x*32 | x <- [1..32]]
+          ES.runSearch (ES.Config [ [x*32 | x <- [1..32]]
                                 , [x*32 | x <- [1..32]]])
              (prog2 inputs :: ExhaustiveSearch Result (Maybe Result))
 
@@ -112,13 +113,13 @@ main = do
       putStrLn "Random search"
       case args of
          [] ->
-           execSearch (RS.Config [(0,1024)] 100)
+           RS.runSearch (RS.Config [(0,1024)] 100)
                       (prog inputs :: RandomSearch Result (Maybe Result))
          ["THREADS"] ->
-           execSearch (RS.Config [(0,1024)] 100)
+           RS.runSearch (RS.Config [(0,1024)] 100)
                       (prog inputs :: RandomSearch Result (Maybe Result))
          ["BOTH"]    ->
-           execSearch (RS.Config [(0,1024),(0,1024)] 100)
+           RS.runSearch (RS.Config [(0,1024),(0,1024)] 100)
                       (prog2 inputs :: RandomSearch Result (Maybe Result))
 
 
@@ -126,14 +127,14 @@ main = do
       putStrLn "Bit climb search"
       case args of
          [] ->
-           execSearch (BS.Config bitCount 1 100 True)
+           BS.runSearch (BS.Config bitCount 1 100 True)
                       (prog inputs :: BitClimbSearch Result (Maybe Result))
          ["THREADS"] ->
-           execSearch (BS.Config bitCount 1 100 True)
+           BS.runSearch (BS.Config bitCount 1 100 True)
                       (prog inputs :: BitClimbSearch Result (Maybe Result))
 
          ["BOTH"]    ->
-           execSearch (BS.Config bitCount 2 100 True)
+           BS.runSearch (BS.Config bitCount 2 100 True)
                       (prog2 inputs :: BitClimbSearch Result (Maybe Result))
 
 

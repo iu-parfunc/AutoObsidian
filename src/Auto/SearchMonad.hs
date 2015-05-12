@@ -38,7 +38,6 @@ TODOs for the SearchMonad abstraction:
 
 module Auto.SearchMonad
        ( SearchMonad(..)
-       , execSearch
        , module Control.Monad  -- get access to forM_ etc
        , module Control.Monad.IO.Class -- maybe just liftIO ?
        ) where
@@ -46,7 +45,7 @@ module Auto.SearchMonad
 import Control.Monad
 import Control.Monad.IO.Class
 
-import Auto.ResultLog
+-- import Auto.ResultLog
 
 -- List of parameters and score
 -- TODO: Abstract this further
@@ -55,33 +54,13 @@ import Auto.ResultLog
 -- | SearchMonad is parameterised over result (fitness) type.
 --   Rather than a fitness function, a monadic action is performed
 --   to evaluate candidate solutions.
---   Individual search strategies implement this class, and specify
---   their own SearchConfig and SearchAux.
-class (Ord result, Monad (m result)) => SearchMonad result m where
-
-  -- | The configuration settings for a particular search.
-  type SearchConfig m
-
-  -- | Values returned in addition to the result.
-  type SearchAux    m
-
-  -- | Run a search to obtain a full resultlog together
-  --   with any Auxiliary data a specific instance decides to return.
-  runSearch :: SearchConfig m
-            -> m result (Maybe result)
-            -> IO (SearchAux m, ResultLog result)
-
+class (Ord result, Monad (m result), MonadIO (m result))
+      => SearchMonad result m where
   -- | Get one of the parameters being tuned. Should be called from
   --   the evaluation action.
   getParam :: Int -> m result Int
 
 
--- | Similar to runSearch but discards the SearchAux data and just
---   returns the result.
-execSearch :: SearchMonad result m
-           => SearchConfig m
-           -> m result (Maybe result)
-           -> IO (ResultLog result)
-execSearch conf m = do
-  (_,rlog) <- runSearch conf m
-  return rlog
+-- This change makes the "IO" aspect of the interface more strange to
+-- me Now it up to any instance of SearchMonad to decide if it is
+-- MonadIO or not for itself 

@@ -251,15 +251,15 @@ main = do
       putStrLn "Exhaustive search"
       case args of
         [] ->
-          execSearch (ES.Config [[0..10]])
-                     (prog1 :: ExhaustiveSearch Result (Maybe Result)) 
+          ES.runSearch (ES.Config [[0..10]])
+                       (prog1 :: ExhaustiveSearch Result (Maybe Result)) 
         ["WARPTH"] -> 
-          execSearch (ES.Config [[0..10]])
-                     (prog1 :: ExhaustiveSearch Result (Maybe Result))
+          ES.runSearch (ES.Config [[0..10]])
+                       (prog1 :: ExhaustiveSearch Result (Maybe Result))
         ["BOTH"] ->
-          execSearch (ES.Config [ [1..12]
-                                , [0..31]])
-                     (prog2 :: ExhaustiveSearch Result (Maybe Result))
+          ES.runSearch (ES.Config [ [1..12]
+                                  , [0..31]])
+                       (prog2 :: ExhaustiveSearch Result (Maybe Result))
         --["BOTH"] ->
         --  execSearch (ES.Config [ [4..10]
         --                        , [0..31]])
@@ -269,14 +269,14 @@ main = do
       putStrLn "Random search"
       case args of
         [] ->
-          execSearch (RS.Config [(0,10)] 10)
-                     (prog1 :: RandomSearch Result (Maybe Result))
+          RS.runSearch (RS.Config [(0,10)] 10)
+                       (prog1 :: RandomSearch Result (Maybe Result))
         ["WARPTH"] ->
-          execSearch (RS.Config [(0,10)] 10)
-                     (prog1 :: RandomSearch Result (Maybe Result))
+          RS.runSearch (RS.Config [(0,10)] 10)
+                       (prog1 :: RandomSearch Result (Maybe Result))
         ["BOTH"]    ->
-          execSearch (RS.Config [(0,10),(0,31)] 100)
-                     (prog2 :: RandomSearch Result (Maybe Result))     
+          RS.runSearch (RS.Config [(0,10),(0,31)] 100)
+                       (prog2 :: RandomSearch Result (Maybe Result))     
 
 
     -- bitcount here needs to be enough for both params..
@@ -286,29 +286,29 @@ main = do
       putStrLn "Bit climb search"
       case args of
         [] ->
-          execSearch (BS.Config bitCount 1 100 True)
-                     (prog1 :: BitClimbSearch Result (Maybe Result))
+          BS.runSearch (BS.Config bitCount 1 100 True)
+                       (prog1 :: BitClimbSearch Result (Maybe Result))
         ["WARPTH"] ->
-          execSearch (BS.Config bitCount 1 100 True)
-                     (prog1 :: BitClimbSearch Result (Maybe Result))
-
+          BS.runSearch (BS.Config bitCount 1 100 True)
+                       (prog1 :: BitClimbSearch Result (Maybe Result))
+  
         ["BOTH"]    ->
-          execSearch (BS.Config bitCount 2 100 True)
-                     (prog2 :: BitClimbSearch Result (Maybe Result))
+          BS.runSearch (BS.Config bitCount 2 100 True)
+                       (prog2 :: BitClimbSearch Result (Maybe Result))
 
     popCount = 100
     genetic args = do
       putStrLn "Simple genetic algorithm"
       case args of
         [] ->
-          execSearch (GS.Config bitCount 1 popCount 100 0.2 3 True)
-                     (prog1 :: GeneticSearch Result (Maybe Result))
+          GS.runSearch (GS.Config bitCount 1 popCount 100 0.2 3 True)
+                       (prog1 :: GeneticSearch Result (Maybe Result))
         ["WARPTH"] ->
-          execSearch (GS.Config bitCount 1 popCount 100 0.2 3 True)
-                     (prog1 :: GeneticSearch Result (Maybe Result))
+          GS.runSearch (GS.Config bitCount 1 popCount 100 0.2 3 True)
+                       (prog1 :: GeneticSearch Result (Maybe Result))
         ["BOTH"]    ->
-          execSearch (GS.Config bitCount 2 popCount 100 0.2 3 True)
-                     (prog2 :: GeneticSearch Result (Maybe Result))
+          GS.runSearch (GS.Config bitCount 2 popCount 100 0.2 3 True)
+                       (prog2 :: GeneticSearch Result (Maybe Result))
 
 
 -----------------------------------------------------------------

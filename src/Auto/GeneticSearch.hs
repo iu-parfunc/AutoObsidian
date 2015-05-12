@@ -154,9 +154,6 @@ newtype GeneticSearch result a =
            )
 
 instance (Ord result, Show result) => SearchMonad result GeneticSearch where
-  type SearchConfig GeneticSearch = Config
-  type SearchAux    GeneticSearch = Population
-
   -- To get the requested parameter we have to look up which thing
   -- we're evaluating in the state. This feels very un-functional to me.
 
@@ -164,58 +161,63 @@ instance (Ord result, Show result) => SearchMonad result GeneticSearch where
     (bstr,n,_,_) <- get
     return $ bitStringToNum $ nthIndividualParam bstr n i
 
-  runSearch cfg (GeneticSearch m) = do
-    stdGen <- newStdGen -- we should be threading this through the search
 
-    let initFunc 0 _ = []
-        initFunc i g =
-          let (g',g'') = split g
-              newI = makeIndividual (numBits cfg) (numParams cfg) g'
-          in newI : (initFunc (i-1) g'')
-        initPop = initFunc (popSize cfg) stdGen
+runSearch :: (Show result, Ord result)
+          => Config
+          -> GeneticSearch result (Maybe result)
+          -> IO (ResultLog result)
+runSearch cfg (GeneticSearch m) = do
+  stdGen <- newStdGen -- we should be threading this through the search
 
-        recordBest iter = do
-          (p,ind,rs,rlog) <- get
-          let results = map fromJust $ filter isJust rs
-              best = head $ sort results
-              rlog' = addResult rlog best iter
-          put (p,ind,rs,rlog')
-          if (verbose cfg)
-            then do liftIO $ putStrLn $ "Best in generation: " ++ (show best)
-                    return ()
-            else return ()
+  let initFunc 0 _ = []
+      initFunc i g =
+        let (g',g'') = split g
+            newI = makeIndividual (numBits cfg) (numParams cfg) g'
+        in newI : (initFunc (i-1) g'')
+      initPop = initFunc (popSize cfg) stdGen
 
-        evalPop = do
-          rs <- forM [0..(popSize cfg)-1] $ \ind -> do
-            (p,_,rs,rlog) <- get
-            put (p,ind,rs,rlog)
-            score <- m
-            return score
-          (p,ind,_,rlog) <- get
+      recordBest iter = do
+        (p,ind,rs,rlog) <- get
+        let results = map fromJust $ filter isJust rs
+            best = head $ sort results
+            rlog' = addResult rlog best iter
+        put (p,ind,rs,rlog')
+        if (verbose cfg)
+          then do liftIO $ putStrLn $ "Best in generation: " ++ (show best)
+                  return ()
+          else return ()
+
+      evalPop = do
+        rs <- forM [0..(popSize cfg)-1] $ \ind -> do
+          (p,_,rs,rlog) <- get
           put (p,ind,rs,rlog)
+          score <- m
+          return score
+        (p,ind,_,rlog) <- get
+        put (p,ind,rs,rlog)
 
-        handlePop iter = do
-          (p,ind,rs,rlog) <- get
-          -- this should be prettier...
-          -- using io just for random numbers is silly
-          p' <- liftIO $ evalRandIO $ generation p rs (mutProb cfg) (tournSize cfg)
-          put (p',ind,rs,rlog)
-          evalPop
-          recordBest iter
-          return ()
+      handlePop iter = do
+        (p,ind,rs,rlog) <- get
+        -- this should be prettier...
+        -- using io just for random numbers is silly
+        p' <- liftIO $ evalRandIO $ generation p rs (mutProb cfg) (tournSize cfg)
+        put (p',ind,rs,rlog)
+        evalPop
+        recordBest iter
+        return ()
 
-        m' = forM_ [1..(numIters cfg)] $ \iter -> do
-          (_,_,rs,_) <- get
-          if null rs
-            then do evalPop
-                    handlePop iter
-                    return ()
-            else do handlePop iter
-                    return ()
+      m' = forM_ [1..(numIters cfg)] $ \iter -> do
+        (_,_,rs,_) <- get
+        if null rs
+          then do evalPop
+                  handlePop iter
+                  return ()
+          else do handlePop iter
+                  return ()
 
-    (_,(p,_,_,rlog)) <- runStateT (runReaderT m' cfg)
-                         (initPop,0,[],
-                          ResultLog (mkFLIFO $ Just 10)
-                                    (Just $ mkFLIFO Nothing)
-                                    [] )
-    return (p,rlog)
+  (_,(p,_,_,rlog)) <- runStateT (runReaderT m' cfg)
+                       (initPop,0,[],
+                        ResultLog (mkFLIFO $ Just 10)
+                                  (Just $ mkFLIFO Nothing)
+                                  [] )
+  return rlog -- (p,rlog)
