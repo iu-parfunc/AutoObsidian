@@ -220,6 +220,13 @@ execIt kernel chunk_size n_chunks threads blocks =
 -----------------------------------------------------------------
 -- TUNING
 -----------------------------------------------------------------
+popCount, bitCount, generations1, generations2, iterations1, iterations2 :: Int
+popCount = 5
+bitCount = 5 -- (2^32) (0..31)
+generations1 = 4
+generations2 = 10
+iterations1 = 10
+iterations2 = popCount * generations2
 
 main = do
 
@@ -269,45 +276,43 @@ main = do
       putStrLn "Random search"
       case args of
         [] ->
-          RS.runSearch (RS.Config [(0,10)] 10)
+          RS.runSearch (RS.Config [(0,10)] iterations1)
                        (prog1 :: RandomSearch Result (Maybe Result))
         ["WARPTH"] ->
-          RS.runSearch (RS.Config [(0,10)] 10)
+          RS.runSearch (RS.Config [(0,10)] iterations1)
                        (prog1 :: RandomSearch Result (Maybe Result))
         ["BOTH"]    ->
-          RS.runSearch (RS.Config [(0,10),(0,31)] 100)
+          RS.runSearch (RS.Config [(0,10),(0,31)] iterations2)
                        (prog2 :: RandomSearch Result (Maybe Result))     
 
 
     -- bitcount here needs to be enough for both params..
     -- we should have a way to specify different bit counts
-    bitCount = 5 -- (2^32) (0..31)
     bitclimb args = do
       putStrLn "Bit climb search"
       case args of
         [] ->
-          BS.runSearch (BS.Config bitCount 1 10 1 True)
+          BS.runSearch (BS.Config bitCount 1 iterations1 1 True)
                        (prog1 :: BitClimbSearch Result (Maybe Result))
         ["WARPTH"] ->
-          BS.runSearch (BS.Config bitCount 1 10 1 True)
+          BS.runSearch (BS.Config bitCount 1 iterations1 1 True)
                        (prog1 :: BitClimbSearch Result (Maybe Result))
   
         ["BOTH"]    ->
-          BS.runSearch (BS.Config bitCount 2 20 1 True)
+          BS.runSearch (BS.Config bitCount 2 iterations2 1 True)
                        (prog2 :: BitClimbSearch Result (Maybe Result))
 
-    popCount = 5
     genetic args = do
       putStrLn "Simple genetic algorithm"
       case args of
         [] ->
-          GS.runSearch (GS.Config bitCount 1 popCount 10 0.2 3 1 True)
+          GS.runSearch (GS.Config bitCount 1 popCount generations1 0.2 3 1 True)
                        (prog1 :: GeneticSearch Result (Maybe Result))
         ["WARPTH"] ->
-          GS.runSearch (GS.Config bitCount 1 popCount 10 0.2 3 1 True)
+          GS.runSearch (GS.Config bitCount 1 popCount generations1 0.2 3 1 True)
                        (prog1 :: GeneticSearch Result (Maybe Result))
         ["BOTH"]    ->
-          GS.runSearch (GS.Config bitCount 2 popCount 10 0.2 3 1 True)
+          GS.runSearch (GS.Config bitCount 2 popCount generations2 0.2 3 1 True)
                        (prog2 :: GeneticSearch Result (Maybe Result))
 
 

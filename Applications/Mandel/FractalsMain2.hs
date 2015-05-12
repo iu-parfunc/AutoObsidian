@@ -55,7 +55,7 @@ instance CSV Result where
 -- parameters
 -- threads   = 256
 --blocks,
-imageSize, identity, count, maxNum, bitCount, domainBitCount, popCount :: Int
+generations, iterations, imageSize, identity, count, maxNum, bitCount, domainBitCount, popCount :: Int
 --blocks    = 64
 imageSize = 1024
 identity  = 256
@@ -64,6 +64,8 @@ maxNum    = 960
 bitCount  = 10
 popCount  = 5
 domainBitCount = 5
+generations = 10
+iterations = popCount * generations
 
 
 -- Iterations for heuristic searches: 50
@@ -138,54 +140,54 @@ main = do
        putStrLn "Bit climb search"
        case args of
          [] ->
-           BS.runSearch (BS.Config bitCount 1 50 1 True)
+           BS.runSearch (BS.Config bitCount 1 iterations 1 True)
                         (prog1 :: BitClimbSearch Result (Maybe Result))
          ["THREADS"] ->
-           BS.runSearch (BS.Config bitCount 1 50 1 True)
+           BS.runSearch (BS.Config bitCount 1 iterations 1 True)
                         (prog1 :: BitClimbSearch Result (Maybe Result))
 
          ["BOTH"]    ->
-           BS.runSearch (BS.Config bitCount 2 50 1 True)
+           BS.runSearch (BS.Config bitCount 2 iterations 1 True)
                         (prog2 :: BitClimbSearch Result (Maybe Result))
 
      genetic args = do
        putStrLn "Simple genetic algorithm"
        case args of
         [] ->
-          GS.runSearch (GS.Config bitCount 1 popCount 10 0.2 3 1 True)
+          GS.runSearch (GS.Config bitCount 1 popCount generations 0.2 3 1 True)
                        (prog1 :: GeneticSearch Result (Maybe Result))
         ["THREADS"] ->
-          GS.runSearch (GS.Config bitCount 1 popCount 10 0.2 3 1 True)
+          GS.runSearch (GS.Config bitCount 1 popCount generations 0.2 3 1 True)
                        (prog1 :: GeneticSearch Result (Maybe Result))
         ["BOTH"]    ->
-          GS.runSearch (GS.Config bitCount 2 popCount 10 0.2 3 1 True)
+          GS.runSearch (GS.Config bitCount 2 popCount generations 0.2 3 1 True)
                        (prog2 :: GeneticSearch Result (Maybe Result))
 
      domainBitclimb args = do
        putStrLn "Bit climb search"
        case args of
          [] ->
-           BS.runSearch (BS.Config domainBitCount 1 50 32 True)
+           BS.runSearch (BS.Config domainBitCount 1 (iterations `div` 2) 32 True)
                         (prog1 :: BitClimbSearch Result (Maybe Result))
          ["THREADS"] ->
-           BS.runSearch (BS.Config domainBitCount 1 50 32 True)
+           BS.runSearch (BS.Config domainBitCount 1 (iterations `div` 2) 32 True)
                         (prog1 :: BitClimbSearch Result (Maybe Result))
 
          ["BOTH"]    ->
-           BS.runSearch (BS.Config domainBitCount 2 50 32 True)
+           BS.runSearch (BS.Config domainBitCount 2 (iterations `div` 2) 32 True)
                         (prog2 :: BitClimbSearch Result (Maybe Result))
 
      domainGenetic args = do
        putStrLn "Simple genetic algorithm"
        case args of
         [] ->
-          GS.runSearch (GS.Config domainBitCount 1 popCount 10 0.2 3 32 True)
+          GS.runSearch (GS.Config domainBitCount 1 popCount (generations `div` 2) 0.2 3 32 True)
                        (prog1 :: GeneticSearch Result (Maybe Result))
         ["THREADS"] ->
-          GS.runSearch (GS.Config domainBitCount 1 popCount 10 0.2 3 32 True)
+          GS.runSearch (GS.Config domainBitCount 1 popCount (generations `div` 2) 0.2 3 32 True)
                        (prog1 :: GeneticSearch Result (Maybe Result))
         ["BOTH"]    ->
-          GS.runSearch (GS.Config domainBitCount 2 popCount 10 0.2 3 32 True)
+          GS.runSearch (GS.Config domainBitCount 2 popCount (generations `div` 2) 0.2 3 32 True)
                        (prog2 :: GeneticSearch Result (Maybe Result))
 
 
