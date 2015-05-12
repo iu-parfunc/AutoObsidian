@@ -29,7 +29,8 @@ import Auto.SearchMonad
 import Auto.RandomSearch as RS
 import Auto.ExhaustiveSearch as ES
 import Auto.BitClimbSearch as BS
-import Auto.GeneticSearch as GS 
+import Auto.GeneticSearch as GS
+import Auto.SimulatedAnnealingSearch as SA
 
 -- timing
 import Data.Time.Clock
@@ -44,6 +45,9 @@ import System.Environment
 ---------------------------------------------------------------------------
 
 data Result = Result ([Int],Double)
+
+instance Annealable Result where
+  extract (Result (_,d)) = d
 
 instance Eq Result where
    (Result (_,d1)) == (Result (_,d2)) = d1 == d2
@@ -81,8 +85,10 @@ main = do
     ("BITCLIMB":_) -> bitclimb inputs (tail args)
     ("EXHAUSTIVE":_) -> exhaustive inputs (tail args)
     ("SGA":_) -> genetic inputs (tail args)
+    ("SA":_) -> anneal inputs (tail args)
     ("DOMAIN_BITCLIMB":_) -> domainBitclimb inputs (tail args)
     ("DOMAIN_SGA":_) -> domainGenetic inputs (tail args)
+    ("DOMAIN_SA":_) -> domainAnneal inputs (tail args)
     _ -> exhaustive inputs []
     
   let filename = argsToFileName args
@@ -143,6 +149,19 @@ main = do
            BS.runSearch (BS.Config bitCount 2 iterations 1 True)
                       (prog2 inputs :: BitClimbSearch Result (Maybe Result))
 
+    anneal inputs args = do
+      putStrLn "simulated annealing search"
+      case args of
+         [] ->
+           SA.runSearch (SA.Config bitCount 1 iterations 0.05 200.0 10.0 1 True)
+                      (prog inputs :: SimulatedAnnealingSearch Result (Maybe Result))
+         ["THREADS"] ->
+           SA.runSearch (SA.Config bitCount 1 iterations 0.05 200.0 10.0 1 True)
+                      (prog inputs :: SimulatedAnnealingSearch Result (Maybe Result))
+         ["BOTH"]    ->
+           SA.runSearch (SA.Config bitCount 2 iterations 0.05 200.0 10.0 1 True)
+                      (prog2 inputs :: SimulatedAnnealingSearch Result (Maybe Result))
+
     genetic inputs args = do
       putStrLn "Simple genetic algorithm"
       case args of
@@ -184,6 +203,18 @@ main = do
           GS.runSearch (GS.Config domainBitCount 2 popCount (generations `div` 2) 0.2 3 32 True)
                        (prog2 inputs :: GeneticSearch Result (Maybe Result))
 
+    domainAnneal inputs args = do
+      putStrLn "simulated annealing search"
+      case args of
+         [] ->
+           SA.runSearch (SA.Config domainBitCount 1 iterations 0.05 50.0 10.0 32 True)
+                      (prog inputs :: SimulatedAnnealingSearch Result (Maybe Result))
+         ["THREADS"] ->
+           SA.runSearch (SA.Config domainBitCount 1 iterations 0.05 50.0 10.0 32 True)
+                      (prog inputs :: SimulatedAnnealingSearch Result (Maybe Result))
+         ["BOTH"]    ->
+           SA.runSearch (SA.Config domainBitCount 2 iterations 0.05 50.0 10.0 32 True)
+                      (prog2 inputs :: SimulatedAnnealingSearch Result (Maybe Result))
 
 
   

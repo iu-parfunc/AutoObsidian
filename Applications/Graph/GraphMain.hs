@@ -26,7 +26,8 @@ import Auto.SearchMonad
 import Auto.RandomSearch as RS
 import Auto.ExhaustiveSearch as ES
 import Auto.BitClimbSearch as BS
-import Auto.GeneticSearch as GS
+import Auto.GeneticSearch as GA
+import Auto.SimulatedAnnealingSearch as SA
 
 -- timing
 import Data.Time.Clock
@@ -51,6 +52,9 @@ import System.Environment
 
 data Result = Result ([Int],Double)
 
+instance Annealable Result where
+  extract (Result (_,d)) = d
+
 instance Eq Result where
    (Result (_,d1)) == (Result (_,d2)) = d1 == d2
 
@@ -64,6 +68,13 @@ instance CSV Result where
   toCSVRow (Result (xs, d)) =
     unwords (intersperse "," (map show xs)) ++ "," ++ show d
 
+popCount, bitCount, generations, iterations :: Int
+popCount = 5
+bitCount = 13
+generations = 10
+iterations = popCount * generations
+maxNum = 8192
+
 main :: IO ()
 main = do
 
@@ -73,7 +84,8 @@ main = do
     ("RANDOM":_) -> random (tail args) 
     ("BITCLIMB":_) -> bitclimb (tail args) 
     ("EXHAUSTIVE":_) -> exhaustive (tail args)
-    ("SGA":_) -> error "NOT IMPLEMENTED"
+    ("SGA":_) -> genetic (tail args)
+    ("SA":_) -> anneal (tail args)
     _ -> exhaustive [] 
 
   putStrLn "Best param"
@@ -101,13 +113,13 @@ main = do
       putStrLn "Exhaustive search"
       case args of
         [] -> 
-          ES.runSearch (ES.Config [[x*32 | x <- [64..128]]])
+          ES.runSearch (ES.Config [[x*32 | x <- [1..64]]])
                        (prog :: ExhaustiveSearch Result (Maybe Result))
         ["1"] -> 
-          ES.runSearch (ES.Config [[x*32 | x <- [64..128]]])
+          ES.runSearch (ES.Config [[x*32 | x <- [1..64]]])
                        (prog :: ExhaustiveSearch Result (Maybe Result))
         ["2"] ->
-          ES.runSearch (ES.Config [ [x*64 | x <- [1..32]]
+          ES.runSearch (ES.Config [ [x*32 | x <- [1..64]]
                                   , [x*2 | x <- [0..32]]])
              (prog2Param :: ExhaustiveSearch Result (Maybe Result))
   
@@ -115,27 +127,54 @@ main = do
       putStrLn "Random search"
       case args of
         [] -> 
-          RS.runSearch (RS.Config [(1,1024)] 1000)
+          RS.runSearch (RS.Config [(1,maxNum)] iterations)
                        (prog :: RandomSearch Result (Maybe Result))
         ["1"] -> 
-          RS.runSearch (RS.Config [(1,1024)] 1000)
+          RS.runSearch (RS.Config [(1,maxNum)] iterations)
                        (prog :: RandomSearch Result (Maybe Result))
         ["2"] ->
-          RS.runSearch (RS.Config [(1,2048),(1,64)] 1000)
+          RS.runSearch (RS.Config [(1,maxNum),(1,64)] iterations)
                        (prog2Param :: RandomSearch Result (Maybe Result))
           
     bitclimb args = do 
       putStrLn "Bit climb search"
       case args of
         [] -> 
-          BS.runSearch (BS.Config 10 1 100 1 True)
+          BS.runSearch (BS.Config bitCount 1 iterations 1 True)
                        (prog :: BitClimbSearch Result (Maybe Result)) 
         ["1"] ->
-          BS.runSearch (BS.Config 10 1 100 1 True)
+          BS.runSearch (BS.Config bitCount 1 iterations 1 True)
                        (prog :: BitClimbSearch Result (Maybe Result))
         ["2"] ->
-          BS.runSearch (BS.Config 10 2 100 1 True)
+          BS.runSearch (BS.Config bitCount 2 iterations 1 True)
                        (prog2Param :: BitClimbSearch Result (Maybe Result))
+
+    anneal args = do
+      putStrLn "simulated annealing search"
+      case args of
+        [] -> 
+          SA.runSearch (SA.Config bitCount 1 iterations 0.05 200.0 10000.0 1 True)
+                       (prog :: SimulatedAnnealingSearch Result (Maybe Result)) 
+        ["1"] ->
+          SA.runSearch (SA.Config bitCount 1 iterations 0.05 200.0 10000.0 1 True)
+                       (prog :: SimulatedAnnealingSearch Result (Maybe Result))
+        ["2"] ->
+          SA.runSearch (SA.Config bitCount 2 iterations 0.05 200.0 10000.0 1 True)
+                       (prog2Param :: SimulatedAnnealingSearch Result (Maybe Result))
+
+    genetic args = do
+      putStrLn "genetic algorithm search"
+      case args of
+        [] -> 
+          GA.runSearch (GA.Config bitCount 1 popCount generations 0.2 3 1 True)
+                       (prog :: GeneticSearch Result (Maybe Result)) 
+        ["1"] ->
+          GA.runSearch (GA.Config bitCount 1 popCount generations 0.2 3 1 True)
+                       (prog :: GeneticSearch Result (Maybe Result))
+        ["2"] ->
+          GA.runSearch (GA.Config bitCount 2 popCount generations 0.2 3 1 True)
+                       (prog2Param :: GeneticSearch Result (Maybe Result))
+
              
   
                      
@@ -161,10 +200,11 @@ prog2Param :: (MonadIO (m Result), SearchMonad Result m)
 prog2Param = do
   -- Get param settings 
 
-  small_th <- getParam 1
+  small_th' <- getParam 1
 
   kernel_th <- getParam 0
-  
+
+  let small_th = small_th `mod` 64
   
   liftIO $ putStrLn $ "Trying with kernel_th = " ++ show kernel_th ++ "\n" ++ 
                       "and small_th = " ++ show small_th 

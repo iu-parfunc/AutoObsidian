@@ -10,10 +10,11 @@ import Obsidian.CodeGen.CUDA
 import Obsidian.Run.CUDA.Exec hiding (exec)
 
 -- Autotuning
-import Auto.BitClimbSearch    as BS
-import Auto.ExhaustiveSearch  as ES
-import Auto.GeneticSearch     as GS
-import Auto.RandomSearch      as RS
+import Auto.BitClimbSearch           as BS
+import Auto.ExhaustiveSearch         as ES
+import Auto.GeneticSearch            as GS
+import Auto.RandomSearch             as RS
+import Auto.SimulatedAnnealingSearch as SA
 import Auto.ResultLog hiding (push)
 import Auto.SearchMonad
 
@@ -35,6 +36,9 @@ import qualified Data.Vector.Storable as V
 -- Tuning related 
 -----------------------------------------------------------------
 data Result = Result ([Int],Double)
+
+instance Annealable Result where
+  extract (Result (_,d)) = d
 
 instance Eq Result where
   (Result (_,d1)) == (Result (_,d2)) = d1 == d2
@@ -237,6 +241,7 @@ main = do
     ("BITCLIMB":_) -> bitclimb (tail args)
     ("EXHAUSTIVE":_) -> exhaustive (tail args)
     ("SGA":_) -> genetic (tail args)
+    ("SA":_) -> anneal (tail args)
     _ -> exhaustive []
 
   let filename = argsToFileName args
@@ -267,10 +272,6 @@ main = do
           ES.runSearch (ES.Config [ [1..12]
                                   , [0..31]])
                        (prog2 :: ExhaustiveSearch Result (Maybe Result))
-        --["BOTH"] ->
-        --  execSearch (ES.Config [ [4..10]
-        --                        , [0..31]])
-        --             (prog2 :: ExhaustiveSearch Result (Maybe Result))
           
     random args = do
       putStrLn "Random search"
@@ -296,8 +297,7 @@ main = do
                        (prog1 :: BitClimbSearch Result (Maybe Result))
         ["WARPTH"] ->
           BS.runSearch (BS.Config bitCount 1 iterations1 1 True)
-                       (prog1 :: BitClimbSearch Result (Maybe Result))
-  
+                       (prog1 :: BitClimbSearch Result (Maybe Result))  
         ["BOTH"]    ->
           BS.runSearch (BS.Config bitCount 2 iterations2 1 True)
                        (prog2 :: BitClimbSearch Result (Maybe Result))
@@ -314,6 +314,20 @@ main = do
         ["BOTH"]    ->
           GS.runSearch (GS.Config bitCount 2 popCount generations2 0.2 3 1 True)
                        (prog2 :: GeneticSearch Result (Maybe Result))
+
+    anneal args = do
+      putStrLn "simulated annealing search"
+      case args of
+        [] ->
+          SA.runSearch (SA.Config bitCount 1 iterations1 0.05 200.0 10000.0 1 True)
+                       (prog1 :: SimulatedAnnealingSearch Result (Maybe Result))
+        ["WARPTH"] ->
+          SA.runSearch (SA.Config bitCount 1 iterations1 0.05 200.0 10000.0 1 True)
+                       (prog1 :: SimulatedAnnealingSearch Result (Maybe Result))  
+        ["BOTH"]    ->
+          SA.runSearch (SA.Config bitCount 2 iterations2 0.05 200.0 10000.0 1 True)
+                       (prog2 :: SimulatedAnnealingSearch Result (Maybe Result))
+          
 
 
 -----------------------------------------------------------------

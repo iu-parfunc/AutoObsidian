@@ -92,6 +92,7 @@ main = do
      ("SA":_) -> anneal (tail args)
      ("DOMAIN_BITCLIMB":_) -> domainBitclimb (tail args)
      ("DOMAIN_SGA":_) -> domainGenetic (tail args)
+     ("DOMAIN_SA":_) -> domainAnneal (tail args)
      _ -> exhaustive []
 
   let filename = argsToFileName args
@@ -164,7 +165,6 @@ main = do
          ["THREADS"] ->
            SA.runSearch (SA.Config bitCount 1 iterations 0.05 200.0 10000.0 1 True)
                         (prog1 :: SimulatedAnnealingSearch Result (Maybe Result))
-
          ["BOTH"]    ->
            SA.runSearch (SA.Config bitCount 2 iterations 0.05 200.0 10000.0 1 True)
                         (prog2 :: SimulatedAnnealingSearch Result (Maybe Result))
@@ -208,6 +208,20 @@ main = do
         ["BOTH"]    ->
           GS.runSearch (GS.Config domainBitCount 2 popCount (generations `div` 2) 0.2 3 32 True)
                        (prog2 :: GeneticSearch Result (Maybe Result))
+
+     domainAnneal args = do
+       putStrLn "simulated annealing search"
+       case args of
+         [] ->
+           SA.runSearch (SA.Config domainBitCount 1 iterations 0.05 50.0 10000.0 32 True)
+                        (prog1 :: SimulatedAnnealingSearch Result (Maybe Result))
+         ["THREADS"] ->
+           SA.runSearch (SA.Config domainBitCount 1 iterations 0.05 50.0 10000.0 32 True)
+                        (prog1 :: SimulatedAnnealingSearch Result (Maybe Result))
+         ["BOTH"]    ->
+           SA.runSearch (SA.Config domainBitCount 2 iterations 0.05 50.0 10000.0 32 True)
+                        (prog2 :: SimulatedAnnealingSearch Result (Maybe Result))
+
 
 
 -- 2d search Both params
