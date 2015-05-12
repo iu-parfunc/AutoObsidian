@@ -353,7 +353,6 @@ prog1 = do
 
   liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
   liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
-  liftIO $ putStrLn $ "And w_param = " ++ (show w_param)
 
   score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
 

@@ -220,10 +220,6 @@ main = do
           ES.runSearch (ES.Config [ [1..12]
                                   , [0..31]])
                        (prog2 :: ExhaustiveSearch Result (Maybe Result))
-        --["BOTH"] ->
-        --  execSearch (ES.Config [ [4..10]
-        --                        , [0..31]])
-        --             (prog2 :: ExhaustiveSearch Result (Maybe Result))
           
     random args = do
       putStrLn "Random search"
@@ -284,20 +280,17 @@ prog2 = do
   w_param <- getParam 0
   t_param <- getParam 1
 
-  let seq_th = 2^w_param
+  let seq_th = 2^(w_param `mod` 13)
       threads = 32 * (t_param + 1)
 
-  if seq_th > 4096
-    then return Nothing 
-    else
-    do 
-      liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
-      liftIO $ putStrLn $ "And seq_th = " ++ (show seq_th)
 
-      score <- liftIO $ scoreIt reductions2 4096 1024 64 threads seq_th
+  liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
+  liftIO $ putStrLn $ "And seq_th = " ++ (show seq_th)
 
-      liftIO $ putStrLn $ "Score = " ++ show score 
-      return $ Just $ Result ([seq_th,threads],score)         
+  score <- liftIO $ scoreIt reductions2 4096 1024 64 threads seq_th
+
+  liftIO $ putStrLn $ "Score = " ++ show score 
+  return $ Just $ Result ([seq_th,threads],score)         
 
   
 prog1 :: (MonadIO (m Result), SearchMonad Result m)
@@ -305,20 +298,16 @@ prog1 :: (MonadIO (m Result), SearchMonad Result m)
 prog1 = do 
   w_param <- getParam 0
 
-  let seq_th = 2^w_param
+  let seq_th = 2^(w_param `mod` 13)
       threads = 128 -- 32 * (t_param + 1)
 
-  if seq_th > 4096
-    then return Nothing 
-    else
-    do 
-      liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
-      liftIO $ putStrLn $ "And seq_th = " ++ (show seq_th)
+  liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
+  liftIO $ putStrLn $ "And seq_th = " ++ (show seq_th)
 
-      score <- liftIO $ scoreIt reductions2 4096 1024 64 threads seq_th
+  score <- liftIO $ scoreIt reductions2 4096 1024 64 threads seq_th
 
-      liftIO $ putStrLn $ "Score = " ++ show score 
-      return $ Just $ Result ([seq_th],score)         
+  liftIO $ putStrLn $ "Score = " ++ show score 
+  return $ Just $ Result ([seq_th],score)         
 
  
 scoreIt kernel chunk_size n_chunks blocks threads seq_th = do
