@@ -42,6 +42,7 @@ data Config = Config { numBits   :: Int
                      , numIters  :: Int
                      , mutProb   :: Double
                      , tournSize :: Int
+                     , stride    :: Int
                      , verbose   :: Bool
                      }
 
@@ -159,7 +160,8 @@ instance (Ord result, Show result) => SearchMonad result GeneticSearch where
 
   getParam i = do
     (bstr,n,_,_) <- get
-    return $ bitStringToNum $ nthIndividualParam bstr n i
+    cfg <- ask
+    return $ (stride cfg) * (bitStringToNum $ nthIndividualParam bstr n i)
 
 
 runSearch :: (Show result, Ord result)
@@ -210,6 +212,7 @@ runSearch cfg (GeneticSearch m) = do
         (_,_,rs,_) <- get
         if null rs
           then do evalPop
+                  recordBest 0
                   handlePop iter
                   return ()
           else do handlePop iter

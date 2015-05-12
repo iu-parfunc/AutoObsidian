@@ -60,8 +60,12 @@ instance CSV Result where
 
 
 
-bitCount :: Int
-bitCount = 10 
+generations, iterations, popCount, bitCount, domainBitCount :: Int
+bitCount = 10
+domainBitCount = 5
+popCount = 5
+generations = 10
+iterations = popCount * generations
 
 main :: IO ()
 main = do
@@ -76,7 +80,9 @@ main = do
     ("RANDOM":_) -> random inputs (tail args)
     ("BITCLIMB":_) -> bitclimb inputs (tail args)
     ("EXHAUSTIVE":_) -> exhaustive inputs (tail args)
-    ("SGA":_) -> error "NOT IMPLEMENTED" 
+    ("SGA":_) -> genetic inputs (tail args)
+    ("DOMAIN_BITCLIMB":_) -> domainBitclimb inputs (tail args)
+    ("DOMAIN_SGA":_) -> domainGenetic inputs (tail args)
     _ -> exhaustive inputs []
     
   let filename = argsToFileName args
@@ -113,13 +119,13 @@ main = do
       putStrLn "Random search"
       case args of
          [] ->
-           RS.runSearch (RS.Config [(0,1024)] 100)
+           RS.runSearch (RS.Config [(0,1024)] iterations)
                       (prog inputs :: RandomSearch Result (Maybe Result))
          ["THREADS"] ->
-           RS.runSearch (RS.Config [(0,1024)] 100)
+           RS.runSearch (RS.Config [(0,1024)] iterations)
                       (prog inputs :: RandomSearch Result (Maybe Result))
          ["BOTH"]    ->
-           RS.runSearch (RS.Config [(0,1024),(0,1024)] 100)
+           RS.runSearch (RS.Config [(0,1024),(0,1024)] iterations)
                       (prog2 inputs :: RandomSearch Result (Maybe Result))
 
 
@@ -127,15 +133,56 @@ main = do
       putStrLn "Bit climb search"
       case args of
          [] ->
-           BS.runSearch (BS.Config bitCount 1 100 True)
+           BS.runSearch (BS.Config bitCount 1 iterations 1 True)
                       (prog inputs :: BitClimbSearch Result (Maybe Result))
          ["THREADS"] ->
-           BS.runSearch (BS.Config bitCount 1 100 True)
+           BS.runSearch (BS.Config bitCount 1 iterations 1 True)
                       (prog inputs :: BitClimbSearch Result (Maybe Result))
 
          ["BOTH"]    ->
-           BS.runSearch (BS.Config bitCount 2 100 True)
+           BS.runSearch (BS.Config bitCount 2 iterations 1 True)
                       (prog2 inputs :: BitClimbSearch Result (Maybe Result))
+
+    genetic inputs args = do
+      putStrLn "Simple genetic algorithm"
+      case args of
+        [] ->
+          GS.runSearch (GS.Config bitCount 1 popCount generations 0.2 3 1 True)
+                       (prog inputs :: GeneticSearch Result (Maybe Result))
+        ["THREADS"] ->
+          GS.runSearch (GS.Config bitCount 1 popCount generations 0.2 3 1 True)
+                       (prog inputs :: GeneticSearch Result (Maybe Result))
+        ["BOTH"] ->
+          GS.runSearch (GS.Config bitCount 2 popCount generations 0.2 3 1 True)
+                       (prog2 inputs :: GeneticSearch Result (Maybe Result))
+
+
+    domainBitclimb inputs args = do
+      putStrLn "Bit climb search"
+      case args of
+         [] ->
+           BS.runSearch (BS.Config domainBitCount 1 (iterations `div` 2) 32 True)
+                      (prog inputs :: BitClimbSearch Result (Maybe Result))
+         ["THREADS"] ->
+           BS.runSearch (BS.Config domainBitCount 1 (iterations `div` 2) 32 True)
+                      (prog inputs :: BitClimbSearch Result (Maybe Result))
+
+         ["BOTH"]    ->
+           BS.runSearch (BS.Config domainBitCount 2 (iterations `div` 2) 32 True)
+                      (prog2 inputs :: BitClimbSearch Result (Maybe Result))
+
+    domainGenetic inputs args = do
+      putStrLn "Simple genetic algorithm"
+      case args of
+        [] ->
+          GS.runSearch (GS.Config domainBitCount 1 popCount (generations `div` 2) 0.2 3 32 True)
+                       (prog inputs :: GeneticSearch Result (Maybe Result))
+        ["THREADS"] ->
+          GS.runSearch (GS.Config domainBitCount 1 popCount (generations `div` 2) 0.2 3 32 True)
+                       (prog inputs :: GeneticSearch Result (Maybe Result))
+        ["BOTH"] ->
+          GS.runSearch (GS.Config domainBitCount 2 popCount (generations `div` 2) 0.2 3 32 True)
+                       (prog2 inputs :: GeneticSearch Result (Maybe Result))
 
 
 

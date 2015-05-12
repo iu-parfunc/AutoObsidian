@@ -286,28 +286,28 @@ main = do
       putStrLn "Bit climb search"
       case args of
         [] ->
-          BS.runSearch (BS.Config bitCount 1 10 True)
+          BS.runSearch (BS.Config bitCount 1 10 1 True)
                        (prog1 :: BitClimbSearch Result (Maybe Result))
         ["WARPTH"] ->
-          BS.runSearch (BS.Config bitCount 1 10 True)
+          BS.runSearch (BS.Config bitCount 1 10 1 True)
                        (prog1 :: BitClimbSearch Result (Maybe Result))
   
         ["BOTH"]    ->
-          BS.runSearch (BS.Config bitCount 2 10 True)
+          BS.runSearch (BS.Config bitCount 2 20 1 True)
                        (prog2 :: BitClimbSearch Result (Maybe Result))
 
-    popCount = 10
+    popCount = 5
     genetic args = do
       putStrLn "Simple genetic algorithm"
       case args of
         [] ->
-          GS.runSearch (GS.Config bitCount 1 popCount 10 0.2 3 True)
+          GS.runSearch (GS.Config bitCount 1 popCount 10 0.2 3 1 True)
                        (prog1 :: GeneticSearch Result (Maybe Result))
         ["WARPTH"] ->
-          GS.runSearch (GS.Config bitCount 1 popCount 10 0.2 3 True)
+          GS.runSearch (GS.Config bitCount 1 popCount 10 0.2 3 1 True)
                        (prog1 :: GeneticSearch Result (Maybe Result))
         ["BOTH"]    ->
-          GS.runSearch (GS.Config bitCount 2 popCount 10 0.2 3 True)
+          GS.runSearch (GS.Config bitCount 2 popCount 10 0.2 3 1 True)
                        (prog2 :: GeneticSearch Result (Maybe Result))
 
 

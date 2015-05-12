@@ -50,6 +50,7 @@ import Prelude              hiding (init)
 data Config = Config { numBits   :: Int
                      , numParams :: Int
                      , numIters  :: Int
+                     , stride    :: Int
                      , verbose   :: Bool
                      }
 
@@ -77,8 +78,9 @@ instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
   --   in the bitstring list in the search state.
   getParam i = do
     (_,bstr,_,_) <- get
-    return $ bitStringToNum $ nthParam bstr i
-
+    cfg <- ask
+    return $ (stride cfg) * (bitStringToNum $ nthParam bstr i)
+    
 -- | Run the hill climbing search.
 runSearch :: (Show result, Ord result) => Config
           -> BitClimbSearch result (Maybe result)

@@ -128,13 +128,13 @@ main = do
       putStrLn "Bit climb search"
       case args of
         [] -> 
-          BS.runSearch (BS.Config 10 1 100 True)
+          BS.runSearch (BS.Config 10 1 100 1 True)
                        (prog :: BitClimbSearch Result (Maybe Result)) 
         ["1"] ->
-          BS.runSearch (BS.Config 10 1 100 True)
+          BS.runSearch (BS.Config 10 1 100 1 True)
                        (prog :: BitClimbSearch Result (Maybe Result))
         ["2"] ->
-          BS.runSearch (BS.Config 10 2 100 True)
+          BS.runSearch (BS.Config 10 2 100 1 True)
                        (prog2Param :: BitClimbSearch Result (Maybe Result))
              
   
