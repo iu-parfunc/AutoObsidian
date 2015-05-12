@@ -330,20 +330,16 @@ prog2 = do
   w_param <- getParam 0
   t_param <- getParam 1
 
-  let warp_th = 2^w_param
+  let warp_th = (2^(w_param `mod` 13))
       threads = 32 * (t_param + 1)
 
-  if warp_th > 4096
-    then return Nothing 
-    else
-    do 
-      liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
-      liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
+  liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
+  liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
 
-      score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
+  score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
 
-      liftIO $ putStrLn $ "Score = " ++ show score 
-      return $ Just $ Result ([warp_th,threads],score)         
+  liftIO $ putStrLn $ "Score = " ++ show score 
+  return $ Just $ Result ([warp_th,threads],score)         
 
   
 prog1 :: (MonadIO (m Result), SearchMonad Result m)
@@ -351,20 +347,18 @@ prog1 :: (MonadIO (m Result), SearchMonad Result m)
 prog1 = do 
   w_param <- getParam 0
 
-  let warp_th = 2^w_param
+  let warp_th = (2^(w_param `mod` 13))
       threads = 128 -- 32 * (t_param + 1)
 
-  if warp_th > 4096
-    then return Nothing 
-    else
-    do 
-      liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
-      liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
 
-      score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
+  liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
+  liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
+  liftIO $ putStrLn $ "And w_param = " ++ (show w_param)
 
-      liftIO $ putStrLn $ "Score = " ++ show score 
-      return $ Just $ Result ([warp_th],score)         
+  score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
+
+  liftIO $ putStrLn $ "Score = " ++ show score 
+  return $ Just $ Result ([warp_th],score)         
 
 
 scoreIt kernel chunk_size n_chunks blocks threads warp_th = do
