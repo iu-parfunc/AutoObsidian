@@ -64,53 +64,25 @@ reduceKernel f arr
        arr' <- compute $ zipWith f a1 a2
        reduceKernel f arr'
 
-reductions :: Data a
-           => (a -> a -> a)
-           -> Pull EWord32 (SPull a)
-           -> Push Grid EWord32 a
-reductions f arr = asGridMap body arr
-  where
-    body arr = execBlock $ reduceKernel f arr
+block_reduce :: Data a =>  (a -> a -> a) -> Pull Word32 a -> Program Block (Push Block Word32 a)
+block_reduce = reduceKernel
 
-block_reduce :: Data a =>  (a -> a -> a) -> Pull Word32 a -> Push Block Word32 a 
-block_reduce f = execBlock . reduceKernel f 
-
-warp_reduce :: Data a =>  (a -> a -> a) -> Pull Word32 a -> Push Warp Word32 a 
-warp_reduce f = execWarp . reduceKernel f 
-
-block_reduce' :: Data a =>  (a -> a -> a) -> Pull Word32 a -> Program Block (Push Block Word32 a)
-block_reduce'= reduceKernel
-
-warp_reduce' :: Data a =>  (a -> a -> a) -> Pull Word32 a -> Program Warp (Push Warp Word32 a)
-warp_reduce' = reduceKernel 
+thread_reduce :: Data a =>  (a -> a -> a) -> Pull Word32 a -> Program Thread (Push Thread Word32 a)
+thread_reduce = reduceKernel 
 
 
 hybrid_reduce :: Data a
               => Word32 
               -> (a -> a -> a)
               -> Pull Word32 a -> Push Block Word32 a
-hybrid_reduce warp_th f arr = execBlock $ b_body arr
+hybrid_reduce seq_th f arr = exec $ b_body arr
   where
     b_body arr = do
       arr' <- compute 
-              $ asBlockMap (warp_reduce f) 
-              $ splitUp warp_th arr
+              $ asBlockMap (exec . thread_reduce f)
+              $ splitUp seq_th arr
       reduceKernel f arr' 
 
-hybrid_reduce' :: Data a
-              => Word32 
-              -> (a -> a -> a)
-              -> Pull Word32 a -> Push Block Word32 a
-hybrid_reduce' warp_th f arr = exec $ b_body arr
-  where
-    b_body arr = do
-      arr' <- compute 
-              $ asBlockMap (exec . warp_reduce' f)
-              $ splitUp warp_th arr
-      reduceKernel f arr' 
-
-
-  
 
 
 reductions2 :: forall a . Data a
@@ -118,21 +90,7 @@ reductions2 :: forall a . Data a
            -> (a -> a -> a)
            -> Pull EWord32 (SPull a)
            -> Push Grid EWord32 a 
-reductions2 warp_th f arr = asGridMap (hybrid_reduce' warp_th f) arr
-  -- asGridMap body arr
-   -- where
-   --   body :: Pull Word32 a -> Push Block Word32 a
-   --   body arr = execBlock $ doBody
-   --     where doBody = 
-   --             do arr' <- compute
-   --                        $ asBlockMap wbody
-   --                        $ splitUp warp_th arr
-   --                reduceKernel f arr'
-
-   --   wbody :: Pull Word32 a -> Push Warp Word32 a
-   --   wbody arr = execWarp $ reduceKernel f arr 
-
-
+reductions2 seq_th f arr = asGridMap (hybrid_reduce seq_th f) arr
 
 -----------------------------------------------------------------
 --
@@ -152,7 +110,7 @@ genIt name kernel threads size =
 testIt = do
   genIt "reduce" (reductions2 32  (+) :: Pull EWord32 (SPull EWord32) -> Push Grid EWord32 EWord32) 128 128
 
-  putStrLn "VARYING WARP_TH (threads:128)" 
+  putStrLn "VARYING SEQ_TH (threads:128)" 
   execIt (reductions2 32 (+)) 1024 2 128 2
   execIt (reductions2 64 (+)) 1024 2 128 2
   execIt (reductions2 128 (+)) 1024 2 128 2
@@ -193,11 +151,6 @@ testIt = do
   execIt (reductions2 32 (+)) 1024 2 256 2
 
   
-
-
-  
--- main = genIt "reduce" (reductions (+) :: Pull EWord32 (SPull EWord32) -> Push Grid EWord32 EWord32) 128 128
-
 --main = testIt
 -----------------------------------------------------------------
 -- Execute it
@@ -243,18 +196,18 @@ main = do
 
 
   where
-    argsToFileName [] = "reduce_EXHAUSTIVE_WARPTH.csv"
-    argsToFileName [x] = "recude_" ++ x ++ "_WARPTH.csv"
-    argsToFileName [x,y] = "reduce_" ++ x ++ "_" ++ y ++ ".csv"
+    argsToFileName [] = "reduceSeq_EXHAUSTIVE_SEQTH.csv"
+    argsToFileName [x] = "recudeSeq_" ++ x ++ "_SEQTH.csv"
+    argsToFileName [x,y] = "reduceSeq_" ++ x ++ "_" ++ y ++ ".csv"
 
     exhaustive args = do
       putStrLn "Exhaustive search"
       case args of
         [] ->
-          ES.runSearch (ES.Config [[0..10]])
+          ES.runSearch (ES.Config [[1..12]])
                        (prog1 :: ExhaustiveSearch Result (Maybe Result)) 
-        ["WARPTH"] -> 
-          ES.runSearch (ES.Config [[0..10]])
+        ["SEQTH"] -> 
+          ES.runSearch (ES.Config [[1..12]])
                        (prog1 :: ExhaustiveSearch Result (Maybe Result))
         ["BOTH"] ->
           ES.runSearch (ES.Config [ [1..12]
@@ -271,7 +224,7 @@ main = do
         [] ->
           RS.runSearch (RS.Config [(0,10)] 10)
                        (prog1 :: RandomSearch Result (Maybe Result))
-        ["WARPTH"] ->
+        ["SEQTH"] ->
           RS.runSearch (RS.Config [(0,10)] 10)
                        (prog1 :: RandomSearch Result (Maybe Result))
         ["BOTH"]    ->
@@ -288,7 +241,7 @@ main = do
         [] ->
           BS.runSearch (BS.Config bitCount 1 10 True)
                        (prog1 :: BitClimbSearch Result (Maybe Result))
-        ["WARPTH"] ->
+        ["SEQTH"] ->
           BS.runSearch (BS.Config bitCount 1 10 True)
                        (prog1 :: BitClimbSearch Result (Maybe Result))
   
@@ -303,7 +256,7 @@ main = do
         [] ->
           GS.runSearch (GS.Config bitCount 1 popCount 10 0.2 3 True)
                        (prog1 :: GeneticSearch Result (Maybe Result))
-        ["WARPTH"] ->
+        ["SEQTH"] ->
           GS.runSearch (GS.Config bitCount 1 popCount 10 0.2 3 True)
                        (prog1 :: GeneticSearch Result (Maybe Result))
         ["BOTH"]    ->
@@ -325,20 +278,20 @@ prog2 = do
   w_param <- getParam 0
   t_param <- getParam 1
 
-  let warp_th = 2^w_param
+  let seq_th = 2^w_param
       threads = 32 * (t_param + 1)
 
-  if warp_th > 4096
+  if seq_th > 4096
     then return Nothing 
     else
     do 
       liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
-      liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
+      liftIO $ putStrLn $ "And seq_th = " ++ (show seq_th)
 
-      score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
+      score <- liftIO $ scoreIt reductions2 4096 1024 64 threads seq_th
 
       liftIO $ putStrLn $ "Score = " ++ show score 
-      return $ Just $ Result ([warp_th,threads],score)         
+      return $ Just $ Result ([seq_th,threads],score)         
 
   
 prog1 :: (MonadIO (m Result), SearchMonad Result m)
@@ -346,27 +299,27 @@ prog1 :: (MonadIO (m Result), SearchMonad Result m)
 prog1 = do 
   w_param <- getParam 0
 
-  let warp_th = 2^w_param
+  let seq_th = 2^w_param
       threads = 128 -- 32 * (t_param + 1)
 
-  if warp_th > 4096
+  if seq_th > 4096
     then return Nothing 
     else
     do 
       liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
-      liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
+      liftIO $ putStrLn $ "And seq_th = " ++ (show seq_th)
 
-      score <- liftIO $ scoreIt reductions2 4096 1024 64 threads warp_th
+      score <- liftIO $ scoreIt reductions2 4096 1024 64 threads seq_th
 
       liftIO $ putStrLn $ "Score = " ++ show score 
-      return $ Just $ Result ([warp_th],score)         
+      return $ Just $ Result ([seq_th],score)         
 
-
-scoreIt kernel chunk_size n_chunks blocks threads warp_th = do
+ 
+scoreIt kernel chunk_size n_chunks blocks threads seq_th = do
   withCUDA $
     do
       kern <- capture (fromIntegral threads)
-              ( ((kernel (fromIntegral warp_th) (+)) . splitUp (fromIntegral chunk_size)) :: Pull EWord32 EWord32 -> Push Grid EWord32 EWord32)
+              ( ((kernel (fromIntegral seq_th) (+)) . splitUp (fromIntegral chunk_size)) :: Pull EWord32 EWord32 -> Push Grid EWord32 EWord32)
 
       (inputs :: V.Vector Word32) <- liftIO $ mkRandomVec (chunk_size * n_chunks)
       
