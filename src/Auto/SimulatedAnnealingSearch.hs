@@ -30,47 +30,52 @@ import Control.Monad.Reader
 import Control.Monad.State
 
 -- | Configuration details for the search.
-data Config result = Config { numBits   :: Int
-                            , numParams :: Int
-                            , numIters  :: Int
-                            , coolRate  :: result
-                            , initTemp  :: result
-                            , verbose   :: Bool
-                            }
+data Config = Config { numBits   :: Int
+                     , numParams :: Int
+                     , numIters  :: Int
+                     , coolRate  :: Double
+                     , initTemp  :: Double
+                     , scale     :: Double
+                     , stride    :: Int
+                     , verbose   :: Bool
+                     }
+
+class Annealable a where
+  extract :: a -> Double
 
 
-acceptance :: (Num a, Ord a, Floating a)
-           => a -> a -> a -> a
-acceptance e e' t =
+acceptance :: Double -> Double -> Double -> Double -> Double
+acceptance e e' t s =
   if e' < e
   then 1.0
-  else exp $ (e - e')/t
+  else exp $ ((e - e') * s)/t
 
 type SearchState result = ( StdGen
                           , MultiBitString
-                          , result
+                          , Double
                           , Maybe result
                           , ResultLog result
                           )
 
 newtype SimulatedAnnealingSearch result a =
-  SimulatedAnnealingSearch (ReaderT (Config result) (StateT (SearchState result) IO) a)
+  SimulatedAnnealingSearch (ReaderT Config (StateT (SearchState result) IO) a)
   deriving ( Monad
            , MonadIO
            , MonadState (SearchState result)
-           , MonadReader (Config result)
+           , MonadReader Config
            , Functor
            , Applicative
            )
 
-instance (Ord result, Show result, Floating result, Random result)
+instance (Ord result, Show result, Annealable result)
          => SearchMonad result SimulatedAnnealingSearch where
   getParam i = do
     (_,bstr,_,_,_) <- get
-    return $ bitStringToNum $ nthParam bstr i
+    cfg <- ask
+    return $ (stride cfg) * (bitStringToNum $ nthParam bstr i)
 
-runSearch :: (Show result, Ord result, Floating result, Random result)
-          => (Config result)
+runSearch :: (Show result, Ord result, Annealable result)
+          => Config
           -> SimulatedAnnealingSearch result (Maybe result)
           -> IO (ResultLog result)
 runSearch cfg (SimulatedAnnealingSearch m) = do
@@ -80,16 +85,15 @@ runSearch cfg (SimulatedAnnealingSearch m) = do
       init = makeIndividual (numBits cfg) (numParams cfg) g'
 
       -- Compare two results
-      resComp p1@(Just res1, _) p2@(Just res2, _) t g =
-        if res2 <= res1
-        then p2
-        else let (r,_) = randomR (0.0,1.0) g
-                 prob = acceptance res1 res2 t
-             in if r < prob
-                then p2
-                else p1
-        -- if res1 <= res2 then p1 else p2
-      resComp a _ _ _ = a
+      resComp p1@(Just res1, _) p2@(Just res2, _) t s g =
+        let (r,_) = randomR (0.0,0.9) g
+            prob = acceptance (extract res1) (extract res2) t s
+        in if r < prob
+           then p2
+           else p1
+      resComp a@(Just _,_) _ _ _ _ = a
+      resComp _ a@(Just _,_) _ _ _ = a
+      resComp a _ _ _ _ = a
 
       testBit b p iter = do
         (g,bstr,temp,res,rlog) <- get
@@ -97,7 +101,7 @@ runSearch cfg (SimulatedAnnealingSearch m) = do
         put (g,bstrNew,temp,Nothing,rlog)
         resNew <- m
         let (g',g'') = split g
-            (resBest,bstrBest) = resComp (resNew,bstrNew) (res,bstr) temp g'
+            (resBest,bstrBest) = resComp (res,bstr) (resNew,bstrNew) temp (scale cfg) g'
         let rlog' =
               -- Only record in log if we move to the new solution
               case resNew of
@@ -110,6 +114,7 @@ runSearch cfg (SimulatedAnnealingSearch m) = do
           then do
           liftIO $ putStrLn $ "Current best: " ++ (show resBest)
           liftIO $ putStrLn $ "Moving state: " ++ (show $ resBest == resNew)
+          liftIO $ putStrLn $ "Current temp: " ++ (show temp)
           return ()
           else
           return ()

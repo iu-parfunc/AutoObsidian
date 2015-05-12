@@ -20,10 +20,11 @@ import Data.List
 import Obsidian.Run.CUDA.Exec
 
 -- Autotuning framework
-import Auto.BitClimbSearch    as BS
-import Auto.ExhaustiveSearch  as ES
-import Auto.GeneticSearch     as GS
-import Auto.RandomSearch      as RS
+import Auto.BitClimbSearch           as BS
+import Auto.ExhaustiveSearch         as ES
+import Auto.GeneticSearch            as GS
+import Auto.RandomSearch             as RS
+import Auto.SimulatedAnnealingSearch as SA
 import Auto.ResultLog
 import Auto.SearchMonad
 
@@ -38,6 +39,9 @@ import System.Environment
 import System.IO
 
 data Result = Result ([Int],Double)
+
+instance Annealable Result where
+  extract (Result (_,d)) = d
 
 instance Eq Result where
   (Result (_,d1)) == (Result (_,d2)) = d1 == d2
@@ -85,6 +89,7 @@ main = do
      ("BITCLIMB":_) -> bitclimb (tail args)
      ("EXHAUSTIVE":_) -> exhaustive (tail args)
      ("SGA":_) -> genetic (tail args)
+     ("SA":_) -> anneal (tail args)
      ("DOMAIN_BITCLIMB":_) -> domainBitclimb (tail args)
      ("DOMAIN_SGA":_) -> domainGenetic (tail args)
      _ -> exhaustive []
@@ -149,6 +154,20 @@ main = do
          ["BOTH"]    ->
            BS.runSearch (BS.Config bitCount 2 iterations 1 True)
                         (prog2 :: BitClimbSearch Result (Maybe Result))
+
+     anneal args = do
+       putStrLn "simulated annealing search"
+       case args of
+         [] ->
+           SA.runSearch (SA.Config bitCount 1 iterations 0.05 200.0 10000.0 1 True)
+                        (prog1 :: SimulatedAnnealingSearch Result (Maybe Result))
+         ["THREADS"] ->
+           SA.runSearch (SA.Config bitCount 1 iterations 0.05 200.0 10000.0 1 True)
+                        (prog1 :: SimulatedAnnealingSearch Result (Maybe Result))
+
+         ["BOTH"]    ->
+           SA.runSearch (SA.Config bitCount 2 iterations 0.05 200.0 10000.0 1 True)
+                        (prog2 :: SimulatedAnnealingSearch Result (Maybe Result))
 
      genetic args = do
        putStrLn "Simple genetic algorithm"
