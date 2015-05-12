@@ -21,7 +21,8 @@ import Control.Monad
 import Control.Applicative
 import OpenUnion41
 -- import Data.FastTCQueue -- old?
-import Data.TASequence.FastQueue hiding (tmap)
+-- import Data.TASequence.FastQueue hiding (tmap)
+import Data.TASequence.FastCatQueue hiding (tmap)
 
 import Data.IORef                       -- For demonstration of lifting
 import Data.Monoid                      -- For demos
@@ -38,7 +39,7 @@ newtype Arr r a b = Arr{unArr:: a -> Eff r b}
 -- of several effectful functions. The paremeter r describes the overall
 -- effect.
 -- The composition members are accumulated in a type-aligned queue
-type GenArr r a b = FastQueue (Arr r) a b
+type GenArr r a b = FastTCQueue (Arr r) a b
 
 -- The Eff monad (not a transformer!)
 -- It is a fairly standard coroutine monad
