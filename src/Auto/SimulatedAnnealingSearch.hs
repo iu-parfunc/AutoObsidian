@@ -103,12 +103,9 @@ runSearch cfg (SimulatedAnnealingSearch m) = do
         let (g',g'') = split g
             (resBest,bstrBest) = resComp (res,bstr) (resNew,bstrNew) temp (scale cfg) g'
         let rlog' =
-              -- Only record in log if we move to the new solution
               case resNew of
                Nothing -> rlog
-               Just r  -> if (resBest == resNew)
-                          then addResult rlog r iter
-                          else rlog
+               Just r  -> addResult rlog r iter
         put (g'',bstrBest,temp,resBest,rlog')
         if (verbose cfg)
           then do

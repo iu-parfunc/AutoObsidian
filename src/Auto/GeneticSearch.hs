@@ -178,22 +178,26 @@ runSearch cfg (GeneticSearch m) = do
         in newI : (initFunc (i-1) g'')
       initPop = initFunc (popSize cfg) stdGen
 
-      recordBest iter = do
-        (p,ind,rs,rlog) <- get
+      reportBest iter = do
+        (_,_,rs,_) <- get
         let results = map fromJust $ filter isJust rs
             best = head $ sort results
-            rlog' = addResult rlog best iter
-        put (p,ind,rs,rlog')
         if (verbose cfg)
-          then do liftIO $ putStrLn $ "Best in generation: " ++ (show best)
+          then do liftIO $ putStrLn $ "Best at " ++ (show iter) ++ " is " ++ (show best)
                   return ()
           else return ()
 
-      evalPop = do
+      evalPop iter = do
         rs <- forM [0..(popSize cfg)-1] $ \ind -> do
           (p,_,rs,rlog) <- get
           put (p,ind,rs,rlog)
           score <- m
+          (p,ind,rs,rlog) <- get
+          -- iter is generation count, so current test is iter * popSize + ind
+          let rlog' = case score of
+                Nothing -> rlog
+                Just score -> addResult rlog score $ (iter * (popSize cfg)) + ind
+          put (p,ind,rs,rlog')
           return score
         (p,ind,_,rlog) <- get
         put (p,ind,rs,rlog)
@@ -204,23 +208,23 @@ runSearch cfg (GeneticSearch m) = do
         -- using io just for random numbers is silly
         p' <- liftIO $ evalRandIO $ generation p rs (mutProb cfg) (tournSize cfg)
         put (p',ind,rs,rlog)
-        evalPop
-        recordBest iter
+        evalPop iter
+        reportBest iter
         return ()
 
       m' = forM_ [1..(numIters cfg)] $ \iter -> do
         (_,_,rs,_) <- get
         if null rs
-          then do evalPop
-                  recordBest 0
+          then do evalPop iter
+                  reportBest iter
                   handlePop iter
                   return ()
           else do handlePop iter
                   return ()
 
-  (_,(p,_,_,rlog)) <- runStateT (runReaderT m' cfg)
+  (_,(_,_,_,rlog)) <- runStateT (runReaderT m' cfg)
                        (initPop,0,[],
                         ResultLog (mkFLIFO $ Just 10)
                                   (Just $ mkFLIFO Nothing)
                                   [] )
-  return rlog -- (p,rlog)
+  return rlog
