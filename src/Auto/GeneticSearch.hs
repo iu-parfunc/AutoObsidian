@@ -72,7 +72,7 @@ tournament ps rs i =
                  ranked = sortBy rankFunc contestants
                  rankFunc (_,r1) (_,r2) = compare r1 r2
                  [(bstr1,_),(bstr2,_)] = take 2 ranked
-             splitPoint <- getRandomR (0,len $ bstr1 !! 0)
+             splitPoint <- getRandomR (0,(len $ bstr1 !! 0)-1)
              let zipCrossFunc b1 b2 = crossBitString b1 b2 splitPoint
              return $ zipWith zipCrossFunc bstr1 bstr2
        in mapM produceOffspring ps
