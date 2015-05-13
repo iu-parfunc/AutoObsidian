@@ -9,8 +9,9 @@ EXECDIR=./.cabal-sandbox/bin
 CSVROOT=/u/crest-team/Joel/AUTOCSV
 
 # EXHAUSTIVE RANDOM'
-STRATEGIES='BITCLIMB SGA SA RANDOM DOMAIN_BITCLIMB DOMAIN_SGA DOMAIN_SA' 
+STRATEGIES=$1 
 
+echo $STRATEGIES
 #create a directory labeled with start time of experiment
 TARGETDIR=$CSVROOT/search_$(date +"%d%m%y_%H%M%S")
 mkdir $TARGETDIR
