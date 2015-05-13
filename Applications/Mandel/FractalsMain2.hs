@@ -105,7 +105,15 @@ main = do
                                  (resultLogBestOverTime res)
   writeFile ("timeseries"++filename) resultOverTime
 
-
+  case resultLogAll res of
+    Nothing -> return ()
+    Just r_log -> do 
+      let itscore = zip [1..] (map (\(Result (_,a)) -> a)
+                              (reverse $ flifoData r_log))
+          itscore' = unlines
+                   $ map (\(iter,r) -> show iter ++ ", " ++ show r)
+                         itscore
+      writeFile ("itscore"++filename) itscore'
 
 
    where
