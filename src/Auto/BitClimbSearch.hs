@@ -105,12 +105,9 @@ runSearch cfg (BitClimbSearch m) = do
         resNew <- m
         let (resBest,bstrBest) = resComp (resNew,bstrNew) (res,bstr)
         let rlog' =
-              -- Only record in log if we move to the new solution
               case resNew of
                 Nothing -> rlog
-                Just r  -> if (resBest == resNew)
-                           then addResult rlog r iter
-                           else rlog
+                Just r  -> addResult rlog r iter -- Always add result!
         put (g,bstrBest,resBest,rlog')
         if (verbose cfg)
           then do
