@@ -86,4 +86,5 @@ runSearch cfg (RandomSearch m) = do
                        , ResultLog (mkFLIFO $ Just 10)
                                    (Just $ mkFLIFO Nothing)
                                    [] )
-    return $ snd s -- $ peek (resultLogBest (snd s))
+    return $ snd s 
+

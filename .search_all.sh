@@ -9,8 +9,9 @@ EXECDIR=./.cabal-sandbox/bin
 CSVROOT=/u/crest-team/Joel/AUTOCSV
 
 # EXHAUSTIVE RANDOM'
-STRATEGIES='BITCLIMB SGA SA RANDOM DOMAIN_SA DOMAIN_SGA DOMAIN_BITCLIMB' 
+STRATEGIES=$1 
 
+echo $STRATEGIES
 #create a directory labeled with start time of experiment
 TARGETDIR=$CSVROOT/search_$(date +"%d%m%y_%H%M%S")
 mkdir $TARGETDIR
@@ -32,8 +33,8 @@ for strat in $STRATEGIES; do
     $EXECDIR/Reduction $strat BOTH 
 
     echo "***SEARCH REDUCTION SEQ***" 
-    $EXECDIR/Reduction $strat SEQTH
-    $EXECDIR/Reduction $strat BOTH 
+    $EXECDIR/ReductionSeq $strat SEQTH
+    $EXECDIR/ReductionSeq $strat BOTH 
 
     echo "***SEARCH GRAPH BFS***"
     #perform Graph 
@@ -44,6 +45,7 @@ for strat in $STRATEGIES; do
     mv *.csv $TARGETDIR
     
 done; 
+
 
 
 
