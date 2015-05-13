@@ -32,8 +32,8 @@ for strat in $STRATEGIES; do
     $EXECDIR/Reduction $strat BOTH 
 
     echo "***SEARCH REDUCTION SEQ***" 
-    $EXECDIR/Reduction $strat SEQTH
-    $EXECDIR/Reduction $strat BOTH 
+    $EXECDIR/ReductionSeq $strat SEQTH
+    $EXECDIR/ReductionSeq $strat BOTH 
 
     echo "***SEARCH GRAPH BFS***"
     #perform Graph 
