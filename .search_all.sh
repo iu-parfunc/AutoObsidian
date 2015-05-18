@@ -38,8 +38,8 @@ for strat in $STRATEGIES; do
 
     echo "***SEARCH GRAPH BFS***"
     #perform Graph 
-    #$EXECDIR/Graph $strat 1 # Just KERNEL_TH  
-    #$EXECDIR/Graph $strat 2 # KERNEL_TH and SMALL_VERTEX 
+    $EXECDIR/Graph $strat 1 # Just KERNEL_TH  
+    $EXECDIR/Graph $strat 2 # KERNEL_TH and SMALL_VERTEX 
     
     # move CSVs to CSV storage 
     mv *.csv $TARGETDIR
