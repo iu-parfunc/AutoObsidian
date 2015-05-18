@@ -89,7 +89,8 @@ main = do
     ("DOMAIN_BITCLIMB":_) -> domainBitclimb inputs (tail args)
     ("DOMAIN_SGA":_) -> domainGenetic inputs (tail args)
     ("DOMAIN_SA":_) -> domainAnneal inputs (tail args)
-    _ -> exhaustive inputs []
+    _ -> error "SPECIFY A SEARCH STRATEGY" 
+    -- _ -> exhaustive inputs []
     
   let filename = argsToFileName args
   let (b, Just a) = resultCSV res
