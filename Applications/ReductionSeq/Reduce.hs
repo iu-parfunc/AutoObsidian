@@ -227,13 +227,13 @@ main = do
       putStrLn "Exhaustive search"
       case args of
         [] ->
-          ES.runSearch (ES.Config [[1..12]])
+          ES.runSearch (ES.Config [[0..12]])
                        (prog1 :: ExhaustiveSearch Result (Maybe Result)) 
         ["SEQTH"] -> 
-          ES.runSearch (ES.Config [[1..12]])
+          ES.runSearch (ES.Config [[0..12]])
                        (prog1 :: ExhaustiveSearch Result (Maybe Result))
         ["BOTH"] ->
-          ES.runSearch (ES.Config [ [1..12]
+          ES.runSearch (ES.Config [ [0..12]
                                   , [0..31]])
                        (prog2 :: ExhaustiveSearch Result (Maybe Result))
           
