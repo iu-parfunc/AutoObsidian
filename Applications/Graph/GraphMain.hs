@@ -214,7 +214,7 @@ prog2Param = do
 
   kernel_th <- getParam 0
 
-  let small_th = small_th' `mod` 64
+  let small_th = small_th' `mod` 65 -- 64 should actually occur
   
   liftIO $ putStrLn $ "Trying with kernel_th = " ++ show kernel_th ++ "\n" ++ 
                       "and small_th = " ++ show small_th 
