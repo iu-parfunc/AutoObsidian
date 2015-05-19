@@ -31,10 +31,13 @@ for strat in $STRATEGIES; do
     echo "***SEARCH REDUCTION***"
     $EXECDIR/Reduction $strat WARPTH
     $EXECDIR/Reduction $strat BOTH 
+    $EXECDIR/Reduction $strat WTB     # warp_th, threads, blocks  
 
     echo "***SEARCH REDUCTION SEQ***" 
     $EXECDIR/ReductionSeq $strat SEQTH
     $EXECDIR/ReductionSeq $strat BOTH 
+    $EXECDIR/ReductionSeq $strat STB  #seq_th, threads, blocks 
+    
 
     echo "***SEARCH GRAPH BFS***"
     #perform Graph 
