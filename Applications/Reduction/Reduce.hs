@@ -285,19 +285,29 @@ main = do
           ES.runSearch (ES.Config [ [0..12]
                                   , [0..31]])
                        (prog2 :: ExhaustiveSearch Result (Maybe Result))
+        ["WTB"] ->
+          ES.runSearch (ES.Config [ [0..12]
+                                  , [0..31]
+                                  , [0..31]])
+                       (prog3 :: ExhaustiveSearch Result (Maybe Result)) 
+          
           
     random args = do
       putStrLn "Random search"
       case args of
         [] ->
-          RS.runSearch (RS.Config [(0,10)] iterations1)
+          RS.runSearch (RS.Config [(0,12)] iterations1)
                        (prog1 :: RandomSearch Result (Maybe Result))
         ["WARPTH"] ->
-          RS.runSearch (RS.Config [(0,10)] iterations1)
+          RS.runSearch (RS.Config [(0,12)] iterations1)
                        (prog1 :: RandomSearch Result (Maybe Result))
         ["BOTH"]    ->
-          RS.runSearch (RS.Config [(0,10),(0,31)] iterations2)
-                       (prog2 :: RandomSearch Result (Maybe Result))     
+          RS.runSearch (RS.Config [(0,12),(0,31)] iterations2)
+                       (prog2 :: RandomSearch Result (Maybe Result))
+
+        ["WTB"]  ->
+          RS.runSearch (RS.Config [(0,12),(0,31),(0,31)] iterations2)
+                       (prog3 :: RandomSearch Result (Maybe Result)) 
 
 
     -- bitcount here needs to be enough for both params..
@@ -314,6 +324,10 @@ main = do
         ["BOTH"]    ->
           BS.runSearch (BS.Config bitCount 2 iterations2 1 True)
                        (prog2 :: BitClimbSearch Result (Maybe Result))
+        ["WTB"]    ->
+          BS.runSearch (BS.Config bitCount 3 iterations2 1 True)
+                       (prog3 :: BitClimbSearch Result (Maybe Result))
+          
 
     genetic args = do
       putStrLn "Simple genetic algorithm"
@@ -327,6 +341,9 @@ main = do
         ["BOTH"]    ->
           GS.runSearch (GS.Config bitCount 2 popCount generations2 0.2 3 1 True)
                        (prog2 :: GeneticSearch Result (Maybe Result))
+        ["WTB"]     ->
+          GS.runSearch (GS.Config bitCount 3 popCount generations2 0.2 3 1 True)
+                       (prog3 :: GeneticSearch Result (Maybe Result)) 
 
     anneal args = do
       putStrLn "simulated annealing search"
@@ -340,12 +357,41 @@ main = do
         ["BOTH"]    ->
           SA.runSearch (SA.Config bitCount 2 iterations2 0.05 200.0 10000.0 1 True)
                        (prog2 :: SimulatedAnnealingSearch Result (Maybe Result))
+        ["WTB"]     ->
+          SA.runSearch (SA.Config bitCount 3 iterations2 0.05 200.0 10000.0 1 True)
+                       (prog3 :: SimulatedAnnealingSearch Result (Maybe Result)) 
           
 
 
 -----------------------------------------------------------------
 -- PROGS
 -----------------------------------------------------------------
+
+-- 2d search both params 
+prog3 :: (MonadIO (m Result), SearchMonad Result m)
+      => m Result (Maybe Result)
+prog3 = do
+
+  -- ctx <- liftIO $ initialize
+
+  w_param <- getParam 0
+  t_param <- getParam 1
+  b_param <- getParam 2
+
+  let warp_th = (2^(w_param `mod` 13))
+      threads = 32 * (t_param + 1)
+      blocks  = 32 * (b_param + 1) 
+
+  liftIO $ putStrLn $ "Trying with threads = " ++ (show threads)
+  liftIO $ putStrLn $ "blocks = " ++ (show blocks)
+  liftIO $ putStrLn $ "And warp_th = " ++ (show warp_th)
+
+  score <- liftIO $ scoreIt reductions2 4096 1024 blocks threads warp_th
+
+  liftIO $ putStrLn $ "Score = " ++ show score 
+  return $ Just $ Result ([warp_th,threads],score)         
+
+
 
 -- 2d search both params 
 prog2 :: (MonadIO (m Result), SearchMonad Result m)
@@ -401,7 +447,7 @@ scoreIt kernel chunk_size n_chunks blocks threads warp_th = do
           fill input 1
           syncAll
           t0   <- liftIO $ getCurrentTime
-          output <== (blocks, kern) <> input
+          output <== ((fromIntegral blocks), kern) <> input
           syncAll 
           t1   <- liftIO $ getCurrentTime
           res <- peekCUDAVector output
