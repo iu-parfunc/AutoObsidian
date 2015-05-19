@@ -86,7 +86,7 @@ main = do
     ("EXHAUSTIVE":_) -> exhaustive (tail args)
     ("SGA":_) -> genetic (tail args)
     ("SA":_) -> anneal (tail args)
-     _ -> error "SPECIFY A SEARCH STRATEGY" 
+    _ -> error "SPECIFY A SEARCH STRATEGY" 
 --  _ -> exhaustive [] 
 
   putStrLn "Best param"
