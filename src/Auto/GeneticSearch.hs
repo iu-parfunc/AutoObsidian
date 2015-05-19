@@ -29,6 +29,7 @@ import Auto.BitString
 import Auto.ResultLog
 import Auto.SearchMonad
 import Control.Applicative
+import Control.Exception
 import Control.Monad.Random
 import Control.Monad.Reader
 import Control.Monad.State
@@ -72,8 +73,10 @@ tournament ps rs i =
                  ranked = sortBy rankFunc contestants
                  rankFunc (_,r1) (_,r2) = compare r1 r2
                  [(bstr1,_),(bstr2,_)] = take 2 ranked
-             splitPoint <- getRandomR (0,(len $ bstr1 !! 0)-1)
-             let zipCrossFunc b1 b2 = crossBitString b1 b2 splitPoint
+                 upperBound = len $ bstr1 !! 0
+             splitPoint <- getRandomR (0,(assert (upperBound>0) upperBound))
+             let zipCrossFunc b1 b2 = crossBitString b1 b2
+                                      (assert (splitPoint>=0) splitPoint)
              return $ zipWith zipCrossFunc bstr1 bstr2
        in mapM produceOffspring ps
 
@@ -92,7 +95,7 @@ mutation ps prob =
       flip <- getRandomR (0.0,1.0)
       if flip < prob
         then do bit <- getRandomR (0,len b)
-                return $ mutateBitString b bit
+                return $ mutateBitString b (assert (bit>=0) bit)
         else return b
 
 -- | Find the best performing individual in each generation and make

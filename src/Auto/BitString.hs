@@ -107,8 +107,8 @@ mutateBitStringGenome g prob bstr@(BitString _ i) =
 
 -- | Crossover bitstrings arr1 and arr2.
 crossBitString :: BitString -> BitString -> Int -> BitString
-crossBitString (BitString {str=arr1}) (BitString {str=arr2}) i =
-  BitString (array s l) i
+crossBitString (BitString {str=arr1, len}) (BitString {str=arr2}) i =
+  BitString (array s l) len
   where s = bounds arr1
         l = zipWith f (assocs arr1) (assocs arr2)
         f (i1,v1) (_,v2)
