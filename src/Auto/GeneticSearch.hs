@@ -214,14 +214,14 @@ runSearch cfg (GeneticSearch m) = do
         reportBest iter
         return ()
 
-      m' = forM_ [1..(numIters cfg)] $ \iter -> do
+      m' = forM_ [1..((numIters cfg)-1)] $ \iter -> do
         (_,_,rs,_) <- get
         if null rs
           then do evalPop iter
                   reportBest iter
-                  handlePop iter
+                  handlePop (iter+1)
                   return ()
-          else do handlePop iter
+          else do handlePop (iter+1)
                   return ()
 
   (_,(_,_,_,rlog)) <- runStateT (runReaderT m' cfg)
