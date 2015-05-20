@@ -43,7 +43,7 @@ newtype ExhaustiveSearch result a =
           , Applicative)
 
 
-instance Ord result => SearchMonad result ExhaustiveSearch where
+instance Ord result => SearchMonad (ExhaustiveSearch result) where
   getParam i = do
     (params,_) <- get
 

@@ -205,8 +205,8 @@ main = do
              
   
                      
-prog :: (MonadIO (m Result), SearchMonad Result m)
-     => m Result (Maybe Result)
+prog :: (MonadIO m, SearchMonad m)
+     => m (Maybe Result)
 prog = do
   -- Get param settings 
   kernel_th <- getParam 0
@@ -222,8 +222,8 @@ prog = do
 ----------------------------------------------------------------------
 --
 ----------------------------------------------------------------------
-prog2Param :: (MonadIO (m Result), SearchMonad Result m)
-     => m Result (Maybe Result)
+prog2Param :: (MonadIO m, SearchMonad m)
+     => m (Maybe Result)
 prog2Param = do
   -- Get param settings 
 

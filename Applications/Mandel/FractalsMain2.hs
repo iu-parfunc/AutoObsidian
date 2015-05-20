@@ -234,8 +234,8 @@ main = do
 
 
 -- 2d search Both params
-prog2 :: (MonadIO (m Result), SearchMonad Result m)
-       => m Result (Maybe Result)
+prog2 :: (MonadIO m, SearchMonad m)
+       => m (Maybe Result)
 prog2 = do
 
   -- This needs to be made part of the configuration of the search
@@ -289,8 +289,8 @@ prog2 = do
 
 
 -- 1d search (only threads)
-prog1 :: (MonadIO (m Result), SearchMonad Result m)
-      => m Result (Maybe Result)
+prog1 :: (MonadIO m, SearchMonad m)
+      => m (Maybe Result)
 prog1 = do
 
   -- This needs to be made part of the configuration of the search

@@ -72,7 +72,7 @@ newtype BitClimbSearch result a =
            , Applicative
            )
 
-instance (Ord result, Show result) => SearchMonad result BitClimbSearch where
+instance (Ord result, Show result) => SearchMonad (BitClimbSearch result) where
 
   -- | Returns the nth param, which is represented by the nth element
   --   in the bitstring list in the search state.

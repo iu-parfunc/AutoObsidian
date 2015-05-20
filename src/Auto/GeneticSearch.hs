@@ -156,7 +156,7 @@ newtype GeneticSearch result a =
            , Applicative
            )
 
-instance (Ord result, Show result) => SearchMonad result GeneticSearch where
+instance (Ord result, Show result) => SearchMonad (GeneticSearch result) where
   -- To get the requested parameter we have to look up which thing
   -- we're evaluating in the state. This feels very un-functional to me.
 

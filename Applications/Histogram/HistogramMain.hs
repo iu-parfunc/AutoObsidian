@@ -228,8 +228,8 @@ main = do
 
   
                      
-prog2 :: (MonadIO (m Result), SearchMonad Result m) 
-     => V.Vector Word32 -> m Result (Maybe Result)
+prog2 :: (MonadIO m, SearchMonad m) 
+     => V.Vector Word32 -> m (Maybe Result)
 prog2 inputs = do
   ctx <- liftIO initialise
 
@@ -246,8 +246,8 @@ prog2 inputs = do
     else body ctx threads blocks
 
   where
-    body :: (MonadIO (m Result), SearchMonad Result m) 
-         => Context -> Int -> Int -> m Result (Maybe Result) 
+    body :: (MonadIO m, SearchMonad m) 
+         => Context -> Int -> Int -> m (Maybe Result) 
     body ctx threads blocks = do
       kern <- liftIO $ captureIO "histogram" (props ctx) 
                                  (fromIntegral threads)
@@ -286,8 +286,8 @@ prog2 inputs = do
 
 
 
-prog :: (MonadIO (m Result), SearchMonad Result m) 
-     => V.Vector Word32 -> m Result (Maybe Result)
+prog :: (MonadIO m, SearchMonad m) 
+     => V.Vector Word32 -> m (Maybe Result)
 prog inputs = do
   ctx <- liftIO initialise
 
@@ -304,8 +304,8 @@ prog inputs = do
     else body ctx threads blocks
 
   where
-    body :: (MonadIO (m Result), SearchMonad Result m) 
-         => Context -> Int -> Int -> m Result (Maybe Result) 
+    body :: (MonadIO m, SearchMonad m) 
+         => Context -> Int -> Int -> m (Maybe Result) 
     body ctx threads blocks = do
       kern <- liftIO $ captureIO "histogram" (props ctx) 
                                  (fromIntegral threads)

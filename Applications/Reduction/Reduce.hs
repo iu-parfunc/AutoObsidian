@@ -368,8 +368,8 @@ main = do
 -----------------------------------------------------------------
 
 -- 2d search both params 
-prog3 :: (MonadIO (m Result), SearchMonad Result m)
-      => m Result (Maybe Result)
+prog3 :: (MonadIO m, SearchMonad m)
+      => m (Maybe Result)
 prog3 = do
 
   -- ctx <- liftIO $ initialize
@@ -394,8 +394,8 @@ prog3 = do
 
 
 -- 2d search both params 
-prog2 :: (MonadIO (m Result), SearchMonad Result m)
-      => m Result (Maybe Result)
+prog2 :: (MonadIO m, SearchMonad m)
+      => m (Maybe Result)
 prog2 = do
 
   -- ctx <- liftIO $ initialize
@@ -415,8 +415,8 @@ prog2 = do
   return $ Just $ Result ([warp_th,threads],score)         
 
   
-prog1 :: (MonadIO (m Result), SearchMonad Result m)
-      => m Result (Maybe Result)
+prog1 :: (MonadIO m, SearchMonad m)
+      => m (Maybe Result)
 prog1 = do 
   w_param <- getParam 0
 

@@ -54,11 +54,10 @@ import Control.Monad.IO.Class
 -- | SearchMonad is parameterised over result (fitness) type.
 --   Rather than a fitness function, a monadic action is performed
 --   to evaluate candidate solutions.
-class (Ord result, Monad (m result), MonadIO (m result))
-      => SearchMonad result m where
+class (Monad m, MonadIO m) => SearchMonad m where
   -- | Get one of the parameters being tuned. Should be called from
   --   the evaluation action.
-  getParam :: Int -> m result Int
+  getParam :: Int -> m Int
 
 
 -- This change makes the "IO" aspect of the interface more strange to

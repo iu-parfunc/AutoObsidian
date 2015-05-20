@@ -68,7 +68,7 @@ newtype SimulatedAnnealingSearch result a =
            )
 
 instance (Ord result, Show result, Annealable result)
-         => SearchMonad result SimulatedAnnealingSearch where
+         => SearchMonad (SimulatedAnnealingSearch result) where
   getParam i = do
     (_,bstr,_,_,_) <- get
     cfg <- ask

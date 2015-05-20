@@ -46,7 +46,7 @@ newtype RandomSearch result a =
           , Functor
           , Applicative)
 
-instance Ord result => SearchMonad result RandomSearch where
+instance Ord result => SearchMonad (RandomSearch result) where
   getParam i = do
     cfg <- ask
     --- Here ---
