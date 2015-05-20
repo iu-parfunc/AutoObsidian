@@ -86,3 +86,6 @@ resultCSV res = ( unlines $ map toCSVRow (flifoData bestRes)
 
 
 
+getBestResult :: ResultLog result -> Maybe result
+getBestResult reslog = peek $ resultLogBest reslog
+  
