@@ -68,12 +68,15 @@ instance CSV Result where
   toCSVRow (Result (xs, d)) =
     unwords (intersperse "," (map show xs)) ++ "," ++ show d
 
-popCount, bitCount, generations, iterations :: Int
+popCount, bitCount, generations, iterations, bitCountLimited, maxNumLimited  :: Int
 popCount = 5
 bitCount = 13
 generations = 10
 iterations = popCount * generations
 maxNum = 8192
+
+maxNumLimited = 2048
+bitCountLimited = 11 
 
 main :: IO ()
 main = do
@@ -146,6 +149,9 @@ main = do
         ["2"] ->
           RS.runSearch (RS.Config [(1,maxNum),(1,64)] iterations)
                        (prog2Param :: RandomSearch Result (Maybe Result))
+        ["LIMITED"] ->
+          RS.runSearch (RS.Config [(1,maxNumLimited),(1,64)] iterations)
+                       (prog2Param :: RandomSearch Result (Maybe Result)) 
           
     bitclimb args = do 
       putStrLn "Bit climb search"
@@ -159,6 +165,9 @@ main = do
         ["2"] ->
           BS.runSearch (BS.Config bitCount 2 iterations 1 True)
                        (prog2Param :: BitClimbSearch Result (Maybe Result))
+        ["LIMITED"] ->
+          BS.runSearch (BS.Config bitCountLimited 2 iterations 1 True)
+                       (prog2Param :: BitClimbSearch Result (Maybe Result)) 
 
     anneal args = do
       putStrLn "simulated annealing search"
@@ -172,6 +181,9 @@ main = do
         ["2"] ->
           SA.runSearch (SA.Config bitCount 2 iterations 0.05 200.0 10000.0 1 True)
                        (prog2Param :: SimulatedAnnealingSearch Result (Maybe Result))
+        ["LIMITED"] ->
+          SA.runSearch (SA.Config bitCountLimited 2 iterations 0.05 200.0 10000.0 1 True)
+                       (prog2Param :: SimulatedAnnealingSearch Result (Maybe Result))
 
     genetic args = do
       putStrLn "genetic algorithm search"
@@ -184,6 +196,10 @@ main = do
                        (prog :: GeneticSearch Result (Maybe Result))
         ["2"] ->
           GA.runSearch (GA.Config bitCount 2 popCount generations 0.2 3 1 True)
+                       (prog2Param :: GeneticSearch Result (Maybe Result))
+
+        ["LIMITED"] ->
+          GA.runSearch (GA.Config bitCountLimited 2 popCount generations 0.2 3 1 True)
                        (prog2Param :: GeneticSearch Result (Maybe Result))
 
              
