@@ -42,6 +42,8 @@ module Auto.SearchMonad
        , module Control.Monad.IO.Class -- maybe just liftIO ?
        ) where
 
+-- These are used by our apps and instances but really have no
+-- place being here! 
 import Control.Monad
 import Control.Monad.IO.Class
 
@@ -54,7 +56,7 @@ import Control.Monad.IO.Class
 -- | SearchMonad is parameterised over result (fitness) type.
 --   Rather than a fitness function, a monadic action is performed
 --   to evaluate candidate solutions.
-class (Monad m, MonadIO m) => SearchMonad m where
+class SearchMonad m where
   -- | Get one of the parameters being tuned. Should be called from
   --   the evaluation action.
   getParam :: Int -> m Int
