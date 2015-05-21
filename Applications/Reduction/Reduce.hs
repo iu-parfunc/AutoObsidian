@@ -296,17 +296,17 @@ main = do
       putStrLn "Random search"
       case args of
         [] ->
-          RS.runSearch (RS.Config [(0,12)] iterations1)
+          RS.runSearch (RS.Config [((0,12),1)] iterations1)
                        (prog1 :: RandomSearch Result (Maybe Result))
         ["WARPTH"] ->
-          RS.runSearch (RS.Config [(0,12)] iterations1)
+          RS.runSearch (RS.Config [((0,12),1)] iterations1)
                        (prog1 :: RandomSearch Result (Maybe Result))
         ["BOTH"]    ->
-          RS.runSearch (RS.Config [(0,12),(0,31)] iterations2)
+          RS.runSearch (RS.Config [((0,12),1),((0,31),1)] iterations2)
                        (prog2 :: RandomSearch Result (Maybe Result))
 
         ["WTB"]  ->
-          RS.runSearch (RS.Config [(0,12),(0,31),(0,31)] iterations2)
+          RS.runSearch (RS.Config [((0,12),1),((0,31),1),((0,31),1)] iterations2)
                        (prog3 :: RandomSearch Result (Maybe Result)) 
 
 

@@ -33,7 +33,7 @@ import Auto.ResultLog
 --   Configuration consists of a list of ranges, one range per parameter
 --   being tuned over, and an integer specifying how many configurations
 --   should be tested. 
-data Config = Config { paramRanges :: [(Int,Int)]
+data Config = Config { paramRanges :: [((Int,Int),Int)]
                      , numIters :: Int }
 
 newtype RandomSearch result a =
@@ -52,11 +52,11 @@ instance Ord result => SearchMonad (RandomSearch result) where
     --- Here ---
     (g,r) <- get
     -- Add error checking !
-    let range = (paramRanges cfg) !! i
+    let (range,x) = (paramRanges cfg) !! i
         (a,g') = randomR range g
     put (g',r)
     --- To here -- can be replaced with a modify
-    return a
+    return (a * x) 
 
 runSearch :: Ord result => Config
           -> RandomSearch result (Maybe result)

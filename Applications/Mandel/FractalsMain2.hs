@@ -93,6 +93,7 @@ main = do
      ("DOMAIN_BITCLIMB":_) -> domainBitclimb (tail args)
      ("DOMAIN_SGA":_) -> domainGenetic (tail args)
      ("DOMAIN_SA":_) -> domainAnneal (tail args)
+     ("DOMAIN_RANDOM":_) -> domainRandom (tail args) 
      _ -> error "SPECIFY A SEARCH STRATEGY" 
      -- _ -> exhaustive []
 
@@ -141,13 +142,26 @@ main = do
        putStrLn "Random search"
        case args of
          [] ->
-           RS.runSearch (RS.Config [(0,1024)] 50)
+           RS.runSearch (RS.Config [((1,1024),1)] 50)
                         (prog1 :: RandomSearch Result (Maybe Result))
          ["THREADS"] ->
-           RS.runSearch (RS.Config [(0,1024)] 50)
+           RS.runSearch (RS.Config [((1,1024),1)] 50)
                         (prog1 :: RandomSearch Result (Maybe Result))
          ["BOTH"]    ->
-           RS.runSearch (RS.Config [(0,1024),(0,1024)] 50)
+           RS.runSearch (RS.Config [((1,1024),1),((1,1024),1)] 50)
+                        (prog2 :: RandomSearch Result (Maybe Result))
+
+     domainRandom args = do
+       putStrLn "Random search"
+       case args of
+         [] ->
+           RS.runSearch (RS.Config [((1,32),32)] 50)
+                        (prog1 :: RandomSearch Result (Maybe Result))
+         ["THREADS"] ->
+           RS.runSearch (RS.Config [((1,32),32)] 50)
+                        (prog1 :: RandomSearch Result (Maybe Result))
+         ["BOTH"]    ->
+           RS.runSearch (RS.Config [((1,32),32),((1,32),32)] 50)
                         (prog2 :: RandomSearch Result (Maybe Result))
 
 

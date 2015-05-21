@@ -141,16 +141,16 @@ main = do
       putStrLn "Random search"
       case args of
         [] -> 
-          RS.runSearch (RS.Config [(1,maxNum)] iterations)
+          RS.runSearch (RS.Config [((1,maxNum),1)] iterations)
                        (prog :: RandomSearch Result (Maybe Result))
         ["1"] -> 
-          RS.runSearch (RS.Config [(1,maxNum)] iterations)
+          RS.runSearch (RS.Config [((1,maxNum),1)] iterations)
                        (prog :: RandomSearch Result (Maybe Result))
         ["2"] ->
-          RS.runSearch (RS.Config [(1,maxNum),(1,64)] iterations)
+          RS.runSearch (RS.Config [((1,maxNum),1),((1,64),1)] iterations)
                        (prog2Param :: RandomSearch Result (Maybe Result))
         ["LIMITED"] ->
-          RS.runSearch (RS.Config [(1,maxNumLimited),(1,64)] iterations)
+          RS.runSearch (RS.Config [((1,maxNumLimited),1),((1,64),1)] iterations)
                        (prog2Param :: RandomSearch Result (Maybe Result)) 
           
     bitclimb args = do 
