@@ -389,7 +389,7 @@ prog3 = do
   score <- liftIO $ scoreIt reductions2 4096 1024 blocks threads warp_th
 
   liftIO $ putStrLn $ "Score = " ++ show score 
-  return $ Just $ Result ([warp_th,threads],score)         
+  return $ Just $ Result ([warp_th,threads,blocks],score)         
 
 
 
