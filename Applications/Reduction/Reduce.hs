@@ -447,8 +447,9 @@ scoreIt kernel chunk_size n_chunks blocks threads warp_th = do
           fill input 1
           syncAll
           t0   <- liftIO $ getCurrentTime
-          output <== ((fromIntegral blocks), kern) <> input
-          syncAll 
+          forM_ [0..10] $ \_ -> do 
+            output <== ((fromIntegral blocks), kern) <> input
+            syncAll 
           t1   <- liftIO $ getCurrentTime
           res <- peekCUDAVector output
           lift $ putStrLn $ show (take 10 res )
