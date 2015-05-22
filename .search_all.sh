@@ -38,8 +38,8 @@ for strat in $STRATEGIES; do
 	    REDUCE) 
 		echo "***SEARCH REDUCTION***"
 		#$EXECDIR/Reduction $strat WARPTH
-		#$EXECDIR/Reduction $strat BOTH 
-		$EXECDIR/Reduction $strat WTB     # warp_th, threads, blocks  
+		$EXECDIR/Reduction $strat BOTH 
+		#$EXECDIR/Reduction $strat WTB     # warp_th, threads, blocks  
 		;;
 	    REDUCESEQ)
 		echo "***SEARCH REDUCTION SEQ***" 
